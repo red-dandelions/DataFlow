@@ -63,7 +63,7 @@ class DataReader final : public DataPipeline {
 
     auto stream_ptr = std::dynamic_pointer_cast<ByteStream>(data_object->shared_from_this());
     if (!stream_ptr) {
-      std::runtime_error("DataObject is not of type Stream");
+      std::runtime_error("DataObject is not of type ByteStream");
     }
 
     return pybind11::cast(stream_ptr).release().ptr();
