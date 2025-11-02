@@ -50,6 +50,7 @@ class ByteStream final : public DataObject {
       std::fclose(local_file_);
     }
     delete[] buffer_;
+    VLOG(1) << "[ByteStream] destructor";
   }
 
   std::shared_ptr<DataObjectMeta> data_meta() const final {

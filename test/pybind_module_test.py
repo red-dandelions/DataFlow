@@ -15,11 +15,12 @@ print(df_module.DataReader.FileSource)
 
 class TestModule(unittest.TestCase):
     def test_DataReader(self):
-        file_list = ["/data/develop/DataFlow/test/utils/text_sample.gz"]
+        file_list = ["/root/DataFlow/test/utils/text_sample.gz"]
 
         d = df_module.DataReader(file_list, file_source=df_module.DataReader.FileSource.kFileList)
         d = df_module.DataDecompressor(d)
         cnt = 0
+        print("python before create iterator")
         for i in d:
             print("s: ", i)
             cnt += 1
