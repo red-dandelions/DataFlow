@@ -1,0 +1,32 @@
+load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+pybind_library(
+    name = "data_objects",
+    #srcs = glob(["*.cc"]),
+    hdrs = glob(["*.h"]),
+    cxxopts = ["-g"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//DataFlow/csrc/core",
+        "@zlib",
+    ],
+    alwayslink = True,
+)
+
+# 重新封装 zlib，强制用 C 编译器编译
+cc_library(
+    name = "zlib_c",
+    copts = [
+        "-xc",  # 关键：强制将 .c 文件按 C 语言而非 C++ 编译
+        "-Wno-register",  # 额外保险：忽略 register 警告（C 模式下通常不报错）
+    ],
+    cxxopts = [
+        "-xc",
+        "-Wno-register",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@zlib",
+    ],
+)

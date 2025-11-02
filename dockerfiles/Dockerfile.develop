@@ -1,0 +1,49 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
+
+RUN apt-get update &&\
+    apt-get install -y lsb-release wget software-properties-common gnupg git git-lfs zip vim
+
+# 安装 clang
+ARG CLANG_VERSION=18
+RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh ${CLANG_VERSION} all && rm llvm.sh
+
+# 编译安装 python3.11
+#
+# * 安装在 /usr/local 路径下
+ARG PYTHON_VERSION=3.11.14
+RUN echo "deb-src http://archive.ubuntu.com/ubuntu/ focal main" >> /etc/apt/sources.list &&\
+    apt-get update &&\
+    apt-get build-dep -y python3.8
+
+RUN wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz &&\
+    tar -xzvf Python-${PYTHON_VERSION}.tgz &&\
+    cd Python-${PYTHON_VERSION} &&\
+    export CFLAGS=-fPIC &&\
+    ./configure --enable-shared --prefix=/usr/local &&\
+    make -j && make install && ldconfig &&\
+    cd .. && rm -r Python-${PYTHON_VERSION} Python-${PYTHON_VERSION}.tgz
+
+#RUN cp /usr/lib/python3/dist-packages/lsb_release.py /usr/local/lib/python3.11/site-packages/
+
+RUN ln -sf /usr/local/bin/python3.11 /usr/local/bin/python && \
+    ln -sf /usr/local/bin/python3.11 /usr/local/bin/python3 && \
+    ln -sf /usr/local/bin/python3.11 /usr/bin/python && \
+    ln -sf /usr/local/bin/python3.11 /usr/bin/python3 && \
+    ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+ENV CC=clang-${CLANG_VERSION} CXX=clang++-${CLANG_VERSION}
+
+# Bazel
+ARG BAZELLIST_VERSION=1.26.0
+RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELLIST_VERSION}/bazelisk-linux-amd64 && \
+    mv bazelisk-linux-amd64 /usr/local/bin/bazel && \
+    chmod +x /usr/local/bin/bazel
+ARG BUILDIFIER_VERSION=8.2.0
+RUN wget https://github.com/bazelbuild/buildtools/releases/download/v${BUILDIFIER_VERSION}/buildifier-linux-amd64 &&\
+    mv buildifier-linux-amd64 /usr/local/bin/buildifier &&\
+    chmod +x /usr/local/bin/buildifier
+
+# 安装 pip 和常用 python 包
+# RUN pip3 install torch==2.8 torchvision==0.23.0

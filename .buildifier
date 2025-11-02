@@ -1,0 +1,3 @@
+BasedOnStyle = "google"
+TabWidth = 4
+ColumnLimit = 100

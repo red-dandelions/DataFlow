@@ -1,0 +1,10 @@
+load("@rules_python//python:defs.bzl", "py_test")
+
+py_test(
+    name = "pybind_module_test",
+    srcs = ["pybind_module_test.py"],
+    data = ["utils/text_sample.gz"],
+    deps = [
+        "//DataFlow",
+    ],
+)

@@ -1,0 +1,10 @@
+.cache
+.vscode
+bazel-*
+./build
+external
+*.gz
+*.so
+*.o
+*.a
+./compile_commands.json

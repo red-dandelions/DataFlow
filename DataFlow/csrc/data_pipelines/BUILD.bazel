@@ -1,0 +1,14 @@
+load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
+
+pybind_library(
+    name = "data_pipelines",
+    #srcs = glob(["*.cc"]),
+    hdrs = glob(["*.h"]),
+    copts = ["-g"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//DataFlow/csrc/common",
+        "//DataFlow/csrc/core",
+    ],
+    alwayslink = True,
+)

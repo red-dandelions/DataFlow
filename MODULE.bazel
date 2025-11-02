@@ -1,0 +1,47 @@
+"""
+DataFlow MODULE.bazel
+=======================
+Defines the Bazel module for the DataFlow project, specifying its dependencies and versions.
+"""
+
+module(
+    name = "data_flow",
+    version = "0.0.1",
+)
+
+bazel_dep(name = "glog", version = "0.7.1")
+bazel_dep(name = "zlib", version = "1.3.1.bcr.7")
+bazel_dep(name = "abseil-cpp", version = "20250814.1")
+bazel_dep(name = "rules_cc", version = "0.2.13")
+bazel_dep(name = "pybind11_bazel", version = "3.0.0")
+bazel_dep(name = "rules_python", version = "1.6.3", dev_dependency = True)
+python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
+python.toolchain(
+    ignore_root_user_error = True,
+    python_version = "3.11",
+)
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pypi",
+    python_version = "3.11",
+    requirements_lock = "//:requirements.txt",
+)
+use_repo(pip, "pypi")
+
+# platforms and toolchains
+bazel_dep(name = "platforms", version = "1.0.0")
+register_toolchains(
+    "//toolchain:cc_toolchain_for_linux_x86_64"
+)
+
+
+# Hedron's Compile Commands Extractor for Bazel
+# https://github.com/hedronvision/bazel-compile-commands-extractor
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+git_override(
+    module_name = "hedron_compile_commands",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    commit = "abb61a688167623088f8768cc9264798df6a9d10",
+    # Replace the commit hash (above) with the latest (https://github.com/hedronvision/bazel-compile-commands-extractor/commits/main).
+    # Even better, set up Renovate and let it do the work for you (see "Suggestion: Updates" in the README).
+)

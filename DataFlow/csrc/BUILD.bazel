@@ -1,0 +1,27 @@
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+load("@rules_python//python:defs.bzl", "py_library")
+
+pybind_extension(
+    name = "pybind_module",
+    srcs = glob(["bind_python/*.cc"]) + [
+        "module.cc",
+        "module.h",
+    ],
+    copts = ["-g"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//DataFlow/csrc/core",
+        "//DataFlow/csrc/data_objects",
+        "//DataFlow/csrc/data_pipelines",
+    ],
+)
+
+py_library(
+    name = "pybind_module_py",
+    srcs = ["__init__.py"],
+    data = [
+        ":pybind_module",
+    ],
+    visibility = ["//visibility:public"],
+    deps = ["//DataFlow/utils"],
+)

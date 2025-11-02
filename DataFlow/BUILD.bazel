@@ -1,0 +1,14 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "DataFlow",
+    srcs = [
+        "__init__.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//DataFlow/data_objects:data_objects_py",
+        "//DataFlow/data_pipelines:data_pipelines_py",
+        "//DataFlow/utils",
+    ],
+)
