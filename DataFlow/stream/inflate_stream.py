@@ -8,8 +8,8 @@ class InflateStreamMeta:
         raise NotImplementedError("InflateStreamMeta is implemented in C++ extension.")
     
     @property
-    def data_type(self) -> str:
-        raise NotImplementedError("data_type is implemented in C++ extension.")
+    def stream_type_name(self) -> str:
+        raise NotImplementedError("stream_type_name is implemented in C++ extension.")
     
 
 @api_export(impl=_pym.InflateStream)
@@ -19,5 +19,5 @@ class InflateStream:
         raise NotImplementedError("InflateStream is implemented in C++ extension.")
     
     @property
-    def data_meta(self) -> InflateStreamMeta:
-        raise NotImplementedError("data_meta is implemented in C++ extension.")
+    def stream_meta(self) -> InflateStreamMeta:
+        raise NotImplementedError("stream_meta is implemented in C++ extension.")

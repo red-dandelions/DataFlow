@@ -15,7 +15,7 @@
 namespace data_flow {
 
 void add_core_bindings(pybind11::module& m);
-void add_data_object_bindings(pybind11::module& m);
-void add_data_pipeline_bindings(pybind11::module& m);
+void add_streams_bindings(pybind11::module& m);
+void add_pipelines_bindings(pybind11::module& m);
 
 }  // namespace data_flow

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <climits>
 #include <cstdio>
 #include <cstring>
 #include <memory>
@@ -18,7 +19,6 @@
 #include "glog/logging.h"
 #include "zlib.h"
 
-#include "DataFlow/csrc/core/data_object.h"
 #include "byte_stream.h"
 
 namespace data_flow {
@@ -26,27 +26,32 @@ namespace data_flow {
 class InflateStream;
 
 // Type alias for Stream metadata
-using InflateStreamMeta = DataMeta<InflateStream>;
+using InflateStreamMeta = StreamMetaBind<InflateStream>;
 
 /**
  * @brief InflateStream is a data object that provides on-the-fly decompression of a compressed
  * ByteStream.
  */
-class InflateStream final : public DataObject {
+class InflateStream final : public Stream {
  public:
-  InflateStream(std::shared_ptr<DataObject> data_object) {
-    CHECK(data_object->data_meta()->data_type() == typeid(ByteStream))
-        << "Input DataObject must be of type ByteStream, got: "
-        << data_object->data_meta()->data_type().name();
-    compressed_stream_ = std::dynamic_pointer_cast<ByteStream>(data_object->shared_from_this());
-    CHECK_NE(compressed_stream_, nullptr) << "Failed to cast DataObject to ByteStream";
+  InflateStream(std::shared_ptr<Stream> stream) {
+    DATAFLOW_THROW_IF(
+        stream->stream_meta()->stream_type_index() != typeid(ByteStream),
+        absl::StrFormat("Input Stream must be of type ByteStream, got: %s",
+                        demangle_type_name(stream->stream_meta()->stream_type_index())));
+
+    compressed_stream_ = std::dynamic_pointer_cast<ByteStream>(stream->shared_from_this());
+    DATAFLOW_THROW_IF(compressed_stream_ == nullptr, "Failed to cast Stream to ByteStream");
+
     inflate_stream_init();
   }
-  ~InflateStream() final { inflateEnd(&z_stream_); }
 
-  std::shared_ptr<DataObjectMeta> data_meta() const final {
-    static std::shared_ptr<DataObjectMeta> meta = std::make_shared<InflateStreamMeta>();
-    return meta;
+  ~InflateStream() final {
+    inflateEnd(&z_stream_);
+  }
+
+  std::shared_ptr<StreamMeta> stream_meta() const final {
+    return std::make_shared<InflateStreamMeta>();
   }
 
   void* ptr() final { return this; }
@@ -72,7 +77,7 @@ class InflateStream final : public DataObject {
       output_chunk_ = std::make_unique<char[]>(output_chunk_size_);
     }
 
-    CHECK_LT(size, INT_MAX) << "Requested chunk size exceeds INT_MAX";
+    DATAFLOW_THROW_IF(size >= INT_MAX, "Requested chunk size size exceeds INT_MAX");
 
     // set zlib output buffer
     z_stream_.avail_out = size;
@@ -100,8 +105,8 @@ class InflateStream final : public DataObject {
               << (z_stream_.next_out - reinterpret_cast<Bytef*>(output_chunk_.get()))
               << ", want_size=" << size << ", avail_in=" << z_stream_.avail_in;
 
-      CHECK(ret == Z_OK || ret == Z_STREAM_END)
-          << "Inflation failed: " << ret << ", msg: " << z_stream_.msg;
+      DATAFLOW_THROW_IF(ret != Z_OK && ret != Z_STREAM_END,
+                        absl::StrFormat("Inflation failed: %d, msg: %s", ret, z_stream_.msg));
 
       if (ret == Z_STREAM_END) {
         end_of_stream_ = true;
@@ -122,8 +127,12 @@ class InflateStream final : public DataObject {
   static constexpr int32_t kMaxWindowSize = 15;
   void inflate_stream_init() {
     z_stream_ = {};
-    CHECK_EQ(inflateInit2(&z_stream_, kFormatAutomatic | kMaxWindowSize), Z_OK)
-        << "Failed to initialize zlib inflate stream";
+
+    int ret = inflateInit2(&z_stream_, kFormatAutomatic | kMaxWindowSize);
+
+    DATAFLOW_THROW_IF(ret != Z_OK,
+                      absl::StrFormat("Failed to initialize zlib inflate stream: %d, msg: %s", ret,
+                                      z_stream_.msg));
   }
 
  private:

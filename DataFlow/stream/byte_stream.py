@@ -8,8 +8,8 @@ class ByteStreamMeta:
         raise NotImplementedError("ByteStreamMeta is implemented in C++ extension.")
     
     @property
-    def data_type(self) -> str:
-        raise NotImplementedError("data_type is implemented in C++ extension.")
+    def stream_type_name(self) -> str:
+        raise NotImplementedError("stream_type_name is implemented in C++ extension.")
     
 @api_export(impl=_pym.ByteStream)
 class ByteStream:
@@ -18,5 +18,5 @@ class ByteStream:
         raise NotImplementedError("ByteStream is implemented in C++ extension.")
     
     @property
-    def data_meta(self) -> ByteStreamMeta:
-        raise NotImplementedError("data_meta is implemented in C++ extension.")
+    def stream_meta(self) -> ByteStreamMeta:
+        raise NotImplementedError("stream_meta is implemented in C++ extension.")

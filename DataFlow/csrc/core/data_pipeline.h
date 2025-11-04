@@ -12,7 +12,7 @@
 
 #include "absl/status/statusor.h"
 
-#include "data_object.h"
+#include "stream.h"
 
 // 前向声明，避免在头文件包含 Python.h
 struct _object;
@@ -27,23 +27,23 @@ struct DataPipeline : std::enable_shared_from_this<DataPipeline> {
   virtual ~DataPipeline() = default;
 
   /**
-   * @brief return the metadata of the output DataObject produced by this pipeline.
+   * @brief return the metadata of the output Stream produced by this pipeline.
    */
-  virtual std::shared_ptr<DataObjectMeta> output_data_meta() const = 0;
+  virtual std::shared_ptr<StreamMeta> output_stream_meta() const = 0;
 
   /**
-   * @brief retrieve the next DataObject from the pipeline.
-   * @return StatusOr containing the next DataObject, or an error status if retrieval fails, or
+   * @brief retrieve the next Stream from the pipeline.
+   * @return StatusOr containing the next Stream, or an error status if retrieval fails, or
    * nullptr if the pipeline is exhausted.
    */
-  virtual absl::StatusOr<std::shared_ptr<DataObject>> next() = 0;
+  virtual absl::StatusOr<std::shared_ptr<Stream>> next() = 0;
 
   /**
-   * @brief Convert a DataObject to a Python object.
-   * @param data_object Shared pointer to the DataObject to convert.
+   * @brief Convert a Stream to a Python object.
+   * @param stream Shared pointer to the Stream to convert.
    * @return PyObject* representing the Python object.
    */
-  virtual PyObject* as_python_object(std::shared_ptr<DataObject> data_object) const = 0;
+  virtual PyObject* as_python_object(std::shared_ptr<Stream> stream) const = 0;
 };
 
 /**

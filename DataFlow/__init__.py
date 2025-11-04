@@ -1,12 +1,14 @@
-from .data_objects import (
-    DataObjectMeta,
-    DataObject,
+from .stream import (
+    StreamMeta,
+    Stream,
     ByteStreamMeta,
     ByteStream,
     InflateStreamMeta,
     InflateStream,
 )
 
-from .data_pipelines import (
+from .pipeline import (
     DataPipeline,
+    DataReader,
+    DataDecompressor,
 )

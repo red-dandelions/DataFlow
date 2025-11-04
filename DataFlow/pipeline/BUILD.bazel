@@ -6,5 +6,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//DataFlow/csrc:pybind_module_py",
+        "//DataFlow/stream:stream_py",
     ],
 )

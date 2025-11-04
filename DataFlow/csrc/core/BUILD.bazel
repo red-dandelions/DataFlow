@@ -7,6 +7,7 @@ pybind_library(
     copts = ["-g"],
     visibility = ["//visibility:public"],
     deps = [
+        "//DataFlow/csrc/common",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:str_format",
         "@glog",

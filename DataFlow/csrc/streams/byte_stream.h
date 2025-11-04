@@ -17,19 +17,19 @@
 
 #include "glog/logging.h"
 
-#include "DataFlow/csrc/core/data_object.h"
+#include "DataFlow/csrc/core/stream.h"
 
 namespace data_flow {
 // Forward declaration
 class ByteStream;
 
 // Type alias for Stream metadata
-using ByteStreamMeta = DataMeta<ByteStream>;
+using ByteStreamMeta = StreamMetaBind<ByteStream>;
 
 /**
- * @brief Stream is a data object that provides chunked access to a file stream.
+ * @brief ByteStream is a data object that provides chunked access to a local file or hdfs file.
  */
-class ByteStream final : public DataObject {
+class ByteStream final : public Stream {
  public:
   ByteStream(std::string&& file_name, size_t buffer_size = 4096)
       : file_name_(std::move(file_name)),
@@ -38,10 +38,8 @@ class ByteStream final : public DataObject {
         pos_(0),
         end_(0) {
     local_file_ = std::fopen(file_name_.data(), "rb");
-    if (!local_file_) {
-      LOG(ERROR) << "Failed to open file: " << file_name_;
-      throw std::runtime_error(absl::StrFormat("Failed to open file: %s", file_name_));
-    }
+    DATAFLOW_THROW_IF(local_file_ == nullptr,
+                      absl::StrFormat("Failed to open file: %s", file_name_));
     refill_buffer();
   }
 
@@ -50,12 +48,10 @@ class ByteStream final : public DataObject {
       std::fclose(local_file_);
     }
     delete[] buffer_;
-    VLOG(1) << "[ByteStream] destructor";
   }
 
-  std::shared_ptr<DataObjectMeta> data_meta() const final {
-    static std::shared_ptr<DataObjectMeta> meta = std::make_shared<ByteStreamMeta>();
-    return meta;
+  std::shared_ptr<StreamMeta> stream_meta() const final {
+    return std::make_shared<ByteStreamMeta>();
   }
 
   void* ptr() final { return this; }

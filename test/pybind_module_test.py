@@ -11,13 +11,13 @@ print(dir(df_module))
 print(df_module.ByteStreamMeta)
 print(df_module.ByteStream)
 print(df_module.DataReader)
-print(df_module.DataReader.FileSource)
+print(df_module.DataReader.Source)
 
 class TestModule(unittest.TestCase):
     def test_DataReader(self):
         file_list = ["/root/DataFlow/test/utils/text_sample.gz"]
 
-        d = df_module.DataReader(file_list, file_source=df_module.DataReader.FileSource.kFileList)
+        d = df_module.DataReader(file_list, source=df_module.DataReader.Source.kFileList)
         d = df_module.DataDecompressor(d)
         cnt = 0
         print("python before create iterator")

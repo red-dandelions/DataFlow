@@ -12,7 +12,6 @@
 
 #include <memory>
 
-#include "glog/logging.h"
 #include "pybind11/pybind11.h"
 
 #include "data_pipeline.h"
@@ -29,32 +28,36 @@ struct DataPipelineIterator {
 
 /**
  * @brief Retrieve the next item from the DataPipeline iterator.
+ * @param self Pointer to the DataPipelineIterator object.
+ * @return PyObject* representing the next item, or nullptr on error or end of iteration.
  */
 PyObject* DataPipelineIterator_next(DataPipelineIterator* self) {
-  auto status_or_obj = self->data_pipeline->next();
-  if (!status_or_obj.ok()) {
-    PyErr_SetString(PyExc_RuntimeError, status_or_obj.status().message().data());
+  auto status_or_stream = self->data_pipeline->next();
+  if (!status_or_stream.ok()) {
+    PyErr_SetString(PyExc_RuntimeError, status_or_stream.status().message().data());
     return nullptr;
   }
 
-  auto obj = status_or_obj.value();
-  if (obj == nullptr) {
+  auto stream = status_or_stream.value();
+  if (stream == nullptr) {
     PyErr_SetNone(PyExc_StopIteration);
     return nullptr;
   }
 
-  return self->data_pipeline->as_python_object(obj);
+  return self->data_pipeline->as_python_object(stream);
 }
 
 /**
  * @brief Python type object for DataPipelineIterator.
+ * @return Pointer to the PyTypeObject representing DataPipelineIterator.
  */
 PyTypeObject* GetIterType() {
   static auto type_getter = []() -> PyTypeObject* {
     static PyTypeObject DataPipelineIterator_Type = {
-        PyVarObject_HEAD_INIT(nullptr, 0) "DataPipelineIterator", /* tp_name */
-        sizeof(DataPipelineIterator),                             /* tp_basicsize */
-        0,                                                        /* tp_itemsize */
+        PyVarObject_HEAD_INIT(nullptr, 0),
+        "DataPipelineIterator",       /* tp_name */
+        sizeof(DataPipelineIterator), /* tp_basicsize */
+        0,                            /* tp_itemsize */
         [](PyObject* self) -> void {
           auto iter = reinterpret_cast<DataPipelineIterator*>(self);
           iter->data_pipeline.~shared_ptr();
@@ -100,21 +103,18 @@ PyTypeObject* GetIterType() {
             return type->tp_alloc(type, 0);
           }
           return nullptr;
-        },       /* tp_new */
-        nullptr, /* tp_free */
-        nullptr, /* tp_is_gc */
-        nullptr, /* tp_bases */
-        nullptr, /* tp_mro */
-        nullptr, /* tp_cache */
-        nullptr, /* tp_subclasses */
-        nullptr, /* tp_weaklist */
-        nullptr, /* tp_del */
-        0,       /* tp_version_tag */
-        [](PyObject* self) {
-          // 释放资源
-          // Add DLog
-        },      /* tp_finalize */
-        nullptr /* tp_vectorcall */
+        },                             /* tp_new */
+        nullptr,                       /* tp_free */
+        nullptr,                       /* tp_is_gc */
+        nullptr,                       /* tp_bases */
+        nullptr,                       /* tp_mro */
+        nullptr,                       /* tp_cache */
+        nullptr,                       /* tp_subclasses */
+        nullptr,                       /* tp_weaklist */
+        nullptr,                       /* tp_del */
+        0,                             /* tp_version_tag */
+        [](PyObject* self) -> void {}, /* tp_finalize */
+        nullptr                        /* tp_vectorcall */
     };
 
     if (PyType_Ready(&DataPipelineIterator_Type) < 0) {
@@ -128,21 +128,27 @@ PyTypeObject* GetIterType() {
 
   return type;
 }
+
+/**
+ * @brief Create a new DataPipeline iterator instance.
+ * @return PyObject* representing the new iterator.
+ */
+inline PyObject* GetIterator() {
+  auto iter = PyObject_CallObject(reinterpret_cast<PyObject*>(GetIterType()), nullptr);
+
+  DATAFLOW_THROW_IF(PyErr_Occurred != nullptr,
+                    pybind11::str(pybind11::handle(PyErr_Occurred())).cast<std::string>());
+
+  return iter;
+}
 }  // namespace
 
 namespace data_flow {
 PyObject* GetDataPipelineIterator(std::shared_ptr<DataPipeline> pipeline) {
-  VLOG(5) << "Creating DataPipelineIterator, data_pipeline: " << typeid((*pipeline)).name();
-
-  auto iter = PyObject_CallObject(reinterpret_cast<PyObject*>(GetIterType()), nullptr);
-  CHECK(PyErr_Occurred() == nullptr)
-      << pybind11::str(pybind11::handle(PyErr_Occurred())).cast<std::string>();
-
-  VLOG(5) << "DataPipelineIterator created successfully";
+  auto iter = GetIterator();
 
   auto p = reinterpret_cast<DataPipelineIterator*>(iter);
   p->data_pipeline = pipeline;
-  VLOG(5) << "DataPipelineIterator initialized with DataPipeline";
 
   return iter;
 }

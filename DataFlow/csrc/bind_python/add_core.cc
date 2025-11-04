@@ -13,15 +13,19 @@
 
 namespace data_flow {
 void add_core_bindings(pybind11::module& m) {
-  pybind11::class_<DataObjectMeta, std::shared_ptr<DataObjectMeta>>(m, "DataObjectMeta")
-      .def_property_readonly("data_type", [](std::shared_ptr<DataObjectMeta> self) {
-        return self->data_type().name();
+  pybind11::class_<StreamMeta, std::shared_ptr<StreamMeta>>(m, "StreamMeta")
+      .def_property_readonly("stream_type_name", [](std::shared_ptr<StreamMeta>) {
+        return pybind11::none();  // abstract property
       });
 
-  pybind11::class_<DataObject, std::shared_ptr<DataObject>>(m, "DataObject")
-      .def_property_readonly("data_meta", [](DataObject* self) { return self->data_meta(); });
+  pybind11::class_<Stream, std::shared_ptr<Stream>>(m, "Stream")
+      .def_property_readonly("stream_meta", [](std::shared_ptr<Stream>) {
+        return pybind11::none();  // abstract property
+      });
 
   pybind11::class_<DataPipeline, std::shared_ptr<DataPipeline>>(m, "DataPipeline")
-      .def("output_data_meta", [](std::shared_ptr<DataPipeline>) { return pybind11::none(); });
+      .def("output_data_meta", [](std::shared_ptr<DataPipeline>) {
+        return pybind11::none();  // abstract method
+      });
 }
 }  // namespace data_flow
