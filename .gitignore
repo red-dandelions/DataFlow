@@ -7,4 +7,5 @@ external
 *.so
 *.o
 *.a
-./compile_commands.json
+compile_commands.json
+MODULE.bazel.lock

@@ -6,8 +6,9 @@ build --repo_env=BAZEL_CXXOPTS="-std=c++20"
 build --cxxopt=-std=c++20
 build --cxxopt=-D_GLIBCXX_USE_CXX11_ABI=1
 build --cxxopt=-fPIC
+build --cxxopt=-g
 
-
+build --compilation_mode=dbg
 build:debug --cxxopt=-UNDEBUG
 build:release --cxxopt=-DNDEBUG
 

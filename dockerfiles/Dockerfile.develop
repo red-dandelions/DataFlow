@@ -6,7 +6,7 @@ RUN apt-get update &&\
     apt-get install -y lsb-release wget software-properties-common gnupg git git-lfs zip vim
 
 # 安装 clang
-ARG CLANG_VERSION=18
+ARG CLANG_VERSION=20
 RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh ${CLANG_VERSION} all && rm llvm.sh
 
 # 编译安装 python3.11
@@ -23,17 +23,14 @@ RUN wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VER
     export CFLAGS=-fPIC &&\
     ./configure --enable-shared --prefix=/usr/local &&\
     make -j && make install && ldconfig &&\
-    cd .. && rm -r Python-${PYTHON_VERSION} Python-${PYTHON_VERSION}.tgz
-
-#RUN cp /usr/lib/python3/dist-packages/lsb_release.py /usr/local/lib/python3.11/site-packages/
+    cd .. && rm -r Python-${PYTHON_VERSION} Python-${PYTHON_VERSION}.tgz && \
+    cp /usr/lib/python3/dist-packages/lsb_release.py /usr/local/lib/python3.11/site-packages/
 
 RUN ln -sf /usr/local/bin/python3.11 /usr/local/bin/python && \
     ln -sf /usr/local/bin/python3.11 /usr/local/bin/python3 && \
     ln -sf /usr/local/bin/python3.11 /usr/bin/python && \
     ln -sf /usr/local/bin/python3.11 /usr/bin/python3 && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-
-ENV CC=clang-${CLANG_VERSION} CXX=clang++-${CLANG_VERSION}
 
 # Bazel
 ARG BAZELLIST_VERSION=1.26.0
@@ -46,4 +43,4 @@ RUN wget https://github.com/bazelbuild/buildtools/releases/download/v${BUILDIFIE
     chmod +x /usr/local/bin/buildifier
 
 # 安装 pip 和常用 python 包
-# RUN pip3 install torch==2.8 torchvision==0.23.0
+RUN pip3 install torch==2.8 torchvision==0.23.0

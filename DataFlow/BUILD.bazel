@@ -7,8 +7,8 @@ py_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//DataFlow/data_objects:data_objects_py",
-        "//DataFlow/data_pipelines:data_pipelines_py",
+        "//DataFlow/stream:stream_py",
+        "//DataFlow/pipeline:pipeline_py",
         "//DataFlow/utils",
     ],
 )

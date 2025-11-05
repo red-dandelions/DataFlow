@@ -172,8 +172,10 @@ export GLOG_v=2
 # 使用 perf 记录性能数据
 perf record -g ./bazel-bin/test/performance_test
 
+sudo perf record -F 99 --call-graph dwarf ...
+
 # 生成性能报告
-perf report
+perf report --stdio > report.txt
 
 # 使用 gperftools
 CPUPROFILE=/tmp/prof.out ./bazel-bin/test/performance_test

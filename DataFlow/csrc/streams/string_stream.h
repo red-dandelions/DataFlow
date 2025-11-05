@@ -10,15 +10,6 @@
 
 #pragma once
 
-#include <climits>
-#include <cstdio>
-#include <cstring>
-#include <memory>
-#include <span>
-
-#include "glog/logging.h"
-#include "zlib.h"
-
 #include "DataFlow/csrc/core/stream.h"
 
 namespace data_flow {
@@ -30,18 +21,15 @@ using StringStreamMeta = StreamMetaBind<StringStream>;
 
 class StringStream final : public Stream {
  public:
-  StringStream(const std::string& input_string) : value_(input_string) {}
+  explicit StringStream(const std::string& input_string);
 
   ~StringStream() final = default;
 
-  std::shared_ptr<StreamMeta> stream_meta() const final {
-    static std::shared_ptr<StreamMeta> meta = std::make_shared<StringStreamMeta>();
-    return meta;
-  }
+  std::shared_ptr<StreamMeta> stream_meta() const final;
 
-  void* ptr() final { return this; }
+  void* ptr() final;
 
-  std::string value() const { return value_; }
+  std::string value() const;
 
  private:
   const std::string value_;

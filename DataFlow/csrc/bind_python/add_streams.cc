@@ -10,18 +10,18 @@
 
 #include <memory>
 
-#include "DataFlow/csrc/data_objects/byte_stream.h"
-#include "DataFlow/csrc/data_objects/inflate_stream.h"
 #include "DataFlow/csrc/module.h"
+#include "DataFlow/csrc/streams/byte_stream.h"
+#include "DataFlow/csrc/streams/inflate_stream.h"
 
 namespace data_flow {
-void add_stream_bindings(pybind11::module& m) {
+void add_streams_bindings(pybind11::module& m) {
   /**
    * @brief ByteStreamMeta and ByteStream bindings
    */
   pybind11::class_<ByteStreamMeta, std::shared_ptr<ByteStreamMeta>, StreamMeta>(m, "ByteStreamMeta")
       .def_property_readonly("stream_type_name", [](std::shared_ptr<ByteStreamMeta> self) {
-        return demangle_type_name(self->stream_type_index());
+        return demangle_str_name(self->stream_type_index().name());
       });
 
   pybind11::class_<ByteStream, std::shared_ptr<ByteStream>, Stream>(m, "ByteStream")
@@ -34,7 +34,7 @@ void add_stream_bindings(pybind11::module& m) {
   pybind11::class_<InflateStreamMeta, std::shared_ptr<InflateStreamMeta>, StreamMeta>(
       m, "InflateStreamMeta")
       .def_property_readonly("stream_type_name", [](std::shared_ptr<InflateStreamMeta> self) {
-        return demangle_type_name(self->stream_type_index());
+        return demangle_str_name(self->stream_type_index().name());
       });
 
   pybind11::class_<InflateStream, std::shared_ptr<InflateStream>, Stream>(m, "InflateStream")

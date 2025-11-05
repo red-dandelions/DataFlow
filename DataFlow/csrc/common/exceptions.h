@@ -10,10 +10,19 @@
 
 #pragma once
 
+#include <backtrace.h>
+#include <cstdlib>
+#include <cxxabi.h>
+#include <execinfo.h>
+#include <iostream>
+#include <signal.h>
 #include <source_location>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unistd.h>
+
+#include "functions.h"
 
 namespace {
 inline std::string format_message(const std::string& msg, size_t width = 70, size_t indent = 11) {
@@ -58,15 +67,19 @@ inline std::string format_message(const std::string& msg, size_t width = 70, siz
 #define HANDLE_DATAFLOW_ERRORS try {
 #define END_HANDLE_DATAFLOW_ERRORS_RET(retval)     \
   }                                                \
-  catch (const pybind11::error_already_set& e) {   \
+  catch (pybind11::error_already_set & e) {        \
     e.restore();                                   \
     return retval;                                 \
   }                                                \
-  catch (const pybind11::builtin_exception& e) {   \
+  catch (pybind11::builtin_exception & e) {        \
     return retval;                                 \
   }                                                \
-  catch (const std::exception& e) {                \
+  catch (std::exception & e) {                     \
     PyErr_SetString(PyExc_RuntimeError, e.what()); \
     return retval;                                 \
   }
 #define END_HANDLE_DATAFLOW_ERRORS END_HANDLE_DATAFLOW_ERRORS_RET(nullptr)
+
+namespace data_flow {
+void setup_signal_handler();
+}  // namespace data_flow

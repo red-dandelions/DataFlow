@@ -15,9 +15,9 @@
 #include "pybind11/stl.h"
 #include "pybind11/stl_bind.h"
 
-#include "DataFlow/csrc/data_pipelines/data_decompressor.h"
-#include "DataFlow/csrc/data_pipelines/data_reader.h"
 #include "DataFlow/csrc/module.h"
+#include "DataFlow/csrc/pipelines/data_decompressor.h"
+#include "DataFlow/csrc/pipelines/data_reader.h"
 
 namespace data_flow {
 void add_pipelines_bindings(pybind11::module& m) {
@@ -32,7 +32,9 @@ void add_pipelines_bindings(pybind11::module& m) {
       .value("kFilePipeline", DataReader::Source::kFilePipeline)
       .value("kPulsarMessageStream", DataReader::Source::kPulsarMessagePipeline);
 
-  cls.def(pybind11::init([](pybind11::handle input_h, pybind11::handle source_h) {
+  cls.def(pybind11::init([](pybind11::handle input_h,
+                            pybind11::handle source_h) -> std::shared_ptr<DataReader> {
+            HANDLE_DATAFLOW_ERRORS
             auto source = source_h.cast<DataReader::Source>();
             switch (source) {
               case DataReader::Source::kFileList: {
@@ -45,12 +47,15 @@ void add_pipelines_bindings(pybind11::module& m) {
                 DATAFLOW_THROW_IF(
                     true, absl::StrFormat("Unsupported Source: %d", static_cast<int32_t>(source)));
             }
+            END_HANDLE_DATAFLOW_ERRORS
           }),
           pybind11::arg("input"), pybind11::arg("source"))
       .def_property_readonly("output_stream_meta", &DataReader::output_stream_meta)
-      .def("__iter__", [](std::shared_ptr<DataReader> self) {
+      .def("__iter__", [](std::shared_ptr<DataReader> self) -> pybind11::object {
+        HANDLE_DATAFLOW_ERRORS
         auto obj = GetDataPipelineIterator(std::reinterpret_pointer_cast<DataPipeline>(self));
         return pybind11::reinterpret_borrow<pybind11::object>(obj);
+        END_HANDLE_DATAFLOW_ERRORS_RET(pybind11::none())
       });
 
   /**
@@ -58,15 +63,19 @@ void add_pipelines_bindings(pybind11::module& m) {
    */
   pybind11::class_<DataDecompressor, std::shared_ptr<DataDecompressor>, DataPipeline>(
       m, "DataDecompressor")
-      .def(pybind11::init([](pybind11::handle input_h) {
+      .def(pybind11::init([](pybind11::handle input_h) -> std::shared_ptr<DataDecompressor> {
+             HANDLE_DATAFLOW_ERRORS
              auto input_pipeline = input_h.cast<std::shared_ptr<DataPipeline>>();
              return std::make_shared<DataDecompressor>(input_pipeline);
+             END_HANDLE_DATAFLOW_ERRORS
            }),
            pybind11::arg("input"))
       .def_property_readonly("output_stream_meta", &DataDecompressor::output_stream_meta)
-      .def("__iter__", [](std::shared_ptr<DataDecompressor> self) {
+      .def("__iter__", [](std::shared_ptr<DataDecompressor> self) -> pybind11::object {
+        HANDLE_DATAFLOW_ERRORS
         auto obj = GetDataPipelineIterator(std::reinterpret_pointer_cast<DataPipeline>(self));
         return pybind11::reinterpret_borrow<pybind11::object>(obj);
+        END_HANDLE_DATAFLOW_ERRORS_RET(pybind11::none())
       });
 }
 }  // namespace data_flow

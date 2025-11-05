@@ -5,12 +5,12 @@ pybind_library(
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.h"]),
     copts = ["-g"],
+    cxxopts = ["-g"],
     visibility = ["//visibility:public"],
     deps = [
         "//DataFlow/csrc/common",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:str_format",
-        "@glog",
     ],
     alwayslink = True,
 )

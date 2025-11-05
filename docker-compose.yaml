@@ -2,7 +2,7 @@
 version: '3.9'
 services:
   develop:
-    image: dandelion000/dataflow:develop
+    image: dandelion000/dataflow:develop # TODO: 更新镜像
     volumes:
       - "./:/root/DataFlow"
     command: [ "/usr/bin/tail", "-f", "/dev/null" ]

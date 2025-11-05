@@ -36,7 +36,7 @@ struct StreamMeta : std::enable_shared_from_this<StreamMeta> {
 template <typename Meta>
 struct StreamMetaBind : public StreamMeta {
   std::type_index stream_type_index() const final { return typeid(Meta); }
-  
+
   virtual ~StreamMetaBind() = default;
 };
 
@@ -61,7 +61,7 @@ struct Stream : std::enable_shared_from_this<Stream> {
     DATAFLOW_THROW_IF(
         typeid(T) != stream_meta()->stream_type_index(),
         absl::StrFormat("Stream type mismatch: expected %s, got %s", demangle_type_name<T>(),
-                        demangle_type_name(stream_meta()->stream_type_index())));
+                        demangle_str_name(stream_meta()->stream_type_index().name())));
 
     return *reinterpret_cast<T*>(ptr());
   }

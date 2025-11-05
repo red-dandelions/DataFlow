@@ -9,15 +9,18 @@
  */
 
 #include "module.h"
+
 #include <exception>
 
 #include "glog/logging.h"
+
 #include "DataFlow/csrc/common/exceptions.h"
 
 PYBIND11_MODULE(pybind_module, m) {
-  // set
-  std::set_terminate(terminate_handler);
-  
+  HANDLE_DATAFLOW_ERRORS
+
+  data_flow::setup_signal_handler();
+
   // 初始化 glog，默认 /tmp
   google::InitGoogleLogging("DataFlow");
 
@@ -27,4 +30,6 @@ PYBIND11_MODULE(pybind_module, m) {
   data_flow::add_core_bindings(m);
   data_flow::add_streams_bindings(m);
   data_flow::add_pipelines_bindings(m);
+
+  END_HANDLE_DATAFLOW_ERRORS_RET()
 }
