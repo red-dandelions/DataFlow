@@ -36,7 +36,7 @@ struct StreamMeta : std::enable_shared_from_this<StreamMeta> {
 template <typename Meta>
 struct StreamMetaBind : public StreamMeta {
   std::type_index stream_type_index() const final { return typeid(Meta); }
-  
+
   virtual ~StreamMetaBind() = default;
 };
 

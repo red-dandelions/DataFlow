@@ -11,8 +11,8 @@ pybind_extension(
     visibility = ["//visibility:public"],
     deps = [
         "//DataFlow/csrc/core",
-        "//DataFlow/csrc/streams",
         "//DataFlow/csrc/pipelines",
+        "//DataFlow/csrc/streams",
     ],
 )
 

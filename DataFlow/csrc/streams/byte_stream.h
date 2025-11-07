@@ -10,12 +10,7 @@
 
 #pragma once
 
-#include <cstdio>
-#include <cstring>
-#include <memory>
 #include <span>
-
-#include "glog/logging.h"
 
 #include "DataFlow/csrc/core/stream.h"
 
@@ -31,60 +26,26 @@ using ByteStreamMeta = StreamMetaBind<ByteStream>;
  */
 class ByteStream final : public Stream {
  public:
-  ByteStream(std::string&& file_name, size_t buffer_size = 4096)
-      : file_name_(std::move(file_name)),
-        buffer_size_(buffer_size),
-        buffer_(new char[buffer_size]),
-        pos_(0),
-        end_(0) {
-    local_file_ = std::fopen(file_name_.data(), "rb");
-    DATAFLOW_THROW_IF(local_file_ == nullptr,
-                      absl::StrFormat("Failed to open file: %s", file_name_));
-    refill_buffer();
-  }
+  ByteStream(std::string&& file_name, size_t buffer_size = 4096);
 
-  ~ByteStream() final {
-    if (local_file_) {
-      std::fclose(local_file_);
-    }
-    delete[] buffer_;
-  }
+  ~ByteStream() final;
 
-  std::shared_ptr<StreamMeta> stream_meta() const final {
-    return std::make_shared<ByteStreamMeta>();
-  }
+  std::shared_ptr<StreamMeta> stream_meta() const final;
 
-  void* ptr() final { return this; }
+  void* ptr() final;
 
-  std::span<const char> peek_chunk() {
-    if (pos_ == end_) {
-      refill_buffer();
-    }
-    return std::span<const char>(buffer_ + pos_, end_ - pos_);
-  }
+  std::span<const char> peek_chunk();
 
-  std::span<const char> read_chunk() {
-    if (pos_ == end_) {
-      refill_buffer();
-    }
+  std::span<const char> read_chunk();
 
-    std::span<const char> chunk(buffer_ + pos_, end_ - pos_);
-    pos_ = end_;
-
-    return chunk;
-  }
-
-  bool eof() const { return pos_ >= end_ && std::feof(local_file_); }
+  bool eof() const;
 
  private:
-  void refill_buffer() {
-    pos_ = 0;
-    end_ = std::fread(buffer_, 1, buffer_size_, local_file_);
-  }
+  void refill_buffer();
 
   FILE* local_file_;
   size_t buffer_size_;
-  char* buffer_;
+  char* buffer_ = nullptr;
   size_t pos_;
   size_t end_;
   std::string file_name_;
