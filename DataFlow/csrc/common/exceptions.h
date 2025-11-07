@@ -58,14 +58,14 @@ inline std::string format_message(const std::string& msg, size_t width = 70, siz
 #define HANDLE_DATAFLOW_ERRORS try {
 #define END_HANDLE_DATAFLOW_ERRORS_RET(retval)     \
   }                                                \
-  catch (const pybind11::error_already_set& e) {   \
+  catch (pybind11::error_already_set& e) {   \
     e.restore();                                   \
     return retval;                                 \
   }                                                \
-  catch (const pybind11::builtin_exception& e) {   \
+  catch (pybind11::builtin_exception& e) {   \
     return retval;                                 \
   }                                                \
-  catch (const std::exception& e) {                \
+  catch (std::exception& e) {                \
     PyErr_SetString(PyExc_RuntimeError, e.what()); \
     return retval;                                 \
   }

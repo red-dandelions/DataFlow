@@ -32,6 +32,7 @@ struct DataPipelineIterator {
  * @return PyObject* representing the next item, or nullptr on error or end of iteration.
  */
 PyObject* DataPipelineIterator_next(DataPipelineIterator* self) {
+  HANDLE_DATAFLOW_ERRORS
   auto status_or_stream = self->data_pipeline->next();
   if (!status_or_stream.ok()) {
     PyErr_SetString(PyExc_RuntimeError, status_or_stream.status().message().data());
@@ -45,6 +46,7 @@ PyObject* DataPipelineIterator_next(DataPipelineIterator* self) {
   }
 
   return self->data_pipeline->as_python_object(stream);
+  END_HANDLE_DATAFLOW_ERRORS
 }
 
 /**
@@ -54,7 +56,9 @@ PyObject* DataPipelineIterator_next(DataPipelineIterator* self) {
 PyTypeObject* GetIterType() {
   static auto type_getter = []() -> PyTypeObject* {
     static PyTypeObject DataPipelineIterator_Type = {
-        PyVarObject_HEAD_INIT(nullptr, 0),
+        // clang-format off
+        PyVarObject_HEAD_INIT(nullptr, 0)
+        // clang-format on
         "DataPipelineIterator",       /* tp_name */
         sizeof(DataPipelineIterator), /* tp_basicsize */
         0,                            /* tp_itemsize */
@@ -118,7 +122,6 @@ PyTypeObject* GetIterType() {
     };
 
     if (PyType_Ready(&DataPipelineIterator_Type) < 0) {
-      LOG(ERROR) << "Failed to ready DataPipelineIterator_Type";
       return nullptr;
     }
     return &DataPipelineIterator_Type;
@@ -136,7 +139,7 @@ PyTypeObject* GetIterType() {
 inline PyObject* GetIterator() {
   auto iter = PyObject_CallObject(reinterpret_cast<PyObject*>(GetIterType()), nullptr);
 
-  DATAFLOW_THROW_IF(PyErr_Occurred != nullptr,
+  DATAFLOW_THROW_IF(PyErr_Occurred() != nullptr,
                     pybind11::str(pybind11::handle(PyErr_Occurred())).cast<std::string>());
 
   return iter;

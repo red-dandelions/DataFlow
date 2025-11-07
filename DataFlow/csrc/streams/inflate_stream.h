@@ -38,7 +38,7 @@ class InflateStream final : public Stream {
     DATAFLOW_THROW_IF(
         stream->stream_meta()->stream_type_index() != typeid(ByteStream),
         absl::StrFormat("Input Stream must be of type ByteStream, got: %s",
-                        demangle_type_name(stream->stream_meta()->stream_type_index())));
+                        demangle_str_name(stream->stream_meta()->stream_type_index().name())));
 
     compressed_stream_ = std::dynamic_pointer_cast<ByteStream>(stream->shared_from_this());
     DATAFLOW_THROW_IF(compressed_stream_ == nullptr, "Failed to cast Stream to ByteStream");

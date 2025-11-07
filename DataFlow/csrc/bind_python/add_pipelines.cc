@@ -15,8 +15,8 @@
 #include "pybind11/stl.h"
 #include "pybind11/stl_bind.h"
 
-#include "DataFlow/csrc/data_pipelines/data_decompressor.h"
-#include "DataFlow/csrc/data_pipelines/data_reader.h"
+#include "DataFlow/csrc/pipelines/data_decompressor.h"
+#include "DataFlow/csrc/pipelines/data_reader.h"
 #include "DataFlow/csrc/module.h"
 
 namespace data_flow {

@@ -62,11 +62,11 @@ class DataReader final : public DataPipeline {
     DATAFLOW_THROW_IF(
         stream->stream_meta()->stream_type_index() != typeid(ByteStream),
         absl::StrFormat("Stream is not of type ByteStream, got: %s",
-                        demangle_type_name(stream->stream_meta()->stream_type_index())));
+                        demangle_str_name(stream->stream_meta()->stream_type_index().name())));
 
     auto stream_ptr = std::dynamic_pointer_cast<ByteStream>(stream->shared_from_this());
 
-    DATAFLOW_THROW_IF(strea_ptr == nullptr, "dynamic cast to ByteStream failed");
+    DATAFLOW_THROW_IF(stream_ptr == nullptr, "dynamic cast to ByteStream failed");
 
     return pybind11::cast(stream_ptr).release().ptr();
   }
@@ -83,8 +83,8 @@ class DataReader final : public DataPipeline {
         std::string current_file = file_paths_.front();
         file_paths_.pop_front();
 
-        DATAFLOW_THROW_IF(!StringFunctors::starts_with(current_file, "hdfs://"),
-                          absl::StrFormt("Local file expected, but got: %s", current_file));
+        DATAFLOW_THROW_IF(StringFunctors::starts_with(current_file, "hdfs://"),
+                          absl::StrFormat("Local file expected, but got: %s", current_file));
 
         auto stream = std::make_shared<ByteStream>(std::move(current_file), kDefaultBufferSize);
         return stream;

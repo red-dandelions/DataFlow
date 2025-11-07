@@ -43,10 +43,10 @@ inline std::string demangle_type_name() {
       abi::__cxa_demangle(name, nullptr, nullptr, &status), std::free);
   return (status == 0) ? demangled.get() : name;
 }
-// Overload for type_info
-inline std::string demangle_type_name(const std::type_info& type_info) {
+
+inline std::string demangle_str_name(const std::string& type_name) {
   int status = 0;
-  const char* name = type_info.name();
+  const char* name = type_name.data();
   std::unique_ptr<char[], void (*)(void*)> demangled(
       abi::__cxa_demangle(name, nullptr, nullptr, &status), std::free);
   return (status == 0) ? demangled.get() : name;

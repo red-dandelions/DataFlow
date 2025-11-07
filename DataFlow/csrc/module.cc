@@ -16,7 +16,7 @@
 
 PYBIND11_MODULE(pybind_module, m) {
   // set
-  std::set_terminate(terminate_handler);
+  //std::set_terminate(terminate_handler);
   
   // 初始化 glog，默认 /tmp
   google::InitGoogleLogging("DataFlow");

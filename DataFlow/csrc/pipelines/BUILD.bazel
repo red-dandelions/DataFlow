@@ -9,6 +9,7 @@ pybind_library(
     deps = [
         "//DataFlow/csrc/common",
         "//DataFlow/csrc/core",
+        "//DataFlow/csrc/streams",
     ],
     alwayslink = True,
 )

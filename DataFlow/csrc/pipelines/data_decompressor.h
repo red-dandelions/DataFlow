@@ -24,15 +24,11 @@ namespace data_flow {
 class DataDecompressor final : public DataPipeline {
  public:
   DataDecompressor(const std::shared_ptr<DataPipeline>& data_pipeline) {
-    CHECK(data_pipeline->output_data_meta()->data_type() == typeid(ByteStream))
-        << "Input DataPipeline must produce ByteStream, got: "
-        << data_pipeline->output_data_meta()->data_type().name();
-
     DATAFLOW_THROW_IF(
         data_pipeline->output_stream_meta()->stream_type_index() != typeid(ByteStream),
         absl::StrFormat(
             "Input DataPipeline must produce ByteStream, got: %s",
-            demangle_type_name(data_pipeline->output_stream_meta()->stream_type_index())));
+            demangle_str_name(data_pipeline->output_stream_meta()->stream_type_index().name())));
 
     input_ = data_pipeline;
   }
@@ -56,6 +52,8 @@ class DataDecompressor final : public DataPipeline {
       return nullptr;
     }
 
+    DATAFLOW_THROW_IF(true, "this is a test");
+
     auto decompress_stream =
         std::make_shared<InflateStream>(std::dynamic_pointer_cast<ByteStream>(stream));
     return decompress_stream;
@@ -65,7 +63,7 @@ class DataDecompressor final : public DataPipeline {
     DATAFLOW_THROW_IF(
         stream->stream_meta()->stream_type_index() != typeid(InflateStream),
         absl::StrFormat("Stream is not of type InflateStream, got: %s",
-                        demangle_type_name(stream->stream_meta()->stream_type_index())));
+                        demangle_str_name(stream->stream_meta()->stream_type_index().name())));
 
     auto stream_ptr = std::dynamic_pointer_cast<InflateStream>(stream->shared_from_this());
     DATAFLOW_THROW_IF(stream_ptr == nullptr, "dynamic cast to InflateStream failed");
