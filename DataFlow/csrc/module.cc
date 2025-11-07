@@ -19,7 +19,7 @@
 PYBIND11_MODULE(pybind_module, m) {
   HANDLE_DATAFLOW_ERRORS
 
-  data_flow::setup_signal_handler();
+  //data_flow::setup_signal_handler();
 
   // 初始化 glog，默认 /tmp
   google::InitGoogleLogging("DataFlow");

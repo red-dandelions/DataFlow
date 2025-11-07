@@ -1,0 +1,135 @@
+#include "batch_area.h"
+
+#include <algorithm>
+#include <atomic>
+#include <errno.h>
+#include <list>
+#include <mutex>
+#include <new>
+#include <string.h>
+#include <sys/mman.h>
+#include <unistd.h>
+
+#include "absl/strings/str_format.h"
+
+#include "exceptions.h"
+
+namespace data_flow {
+namespace area {
+struct AreaBlockManager;
+}
+
+struct AreaBlock {
+  void* addr;
+  const size_t size;
+  std::atomic_size_t allocated{0};
+
+ private:
+  explicit AreaBlock(void* a, size_t s) : addr(a), size(s) {}
+  friend area::AreaBlockManager;
+};
+
+namespace area {
+struct AreaBlockManager {
+  static AreaBlockManager* Instance() {
+    static AreaBlockManager mgr;
+    return &mgr;
+  }
+
+  void pre_alloc_area_blocks(size_t count, size_t size) {
+    for (size_t i = 0; i < count; ++i) {
+      free_blocks_.push_back(allocate_area_block(size));
+    }
+  }
+
+  AreaBlock* allocate_area_block(size_t size) {
+    std::lock_guard<std::mutex> lock(mtx_);
+    if (!free_blocks_.empty()) {
+      for (auto it = free_blocks_.begin(); it != free_blocks_.end(); ++it) {
+        if ((*it)->size >= size) {
+          AreaBlock* area_block = *it;
+          free_blocks_.erase(it);
+          area_block_to_idx_[area_block] = used_blocks_.size();
+          used_blocks_.push_back(area_block);
+          return area_block;
+        }
+      }
+    }
+
+    void* addr = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+    DATAFLOW_THROW_IF(addr == MAP_FAILED, absl::StrFormat("mmap failed: %s", strerror(errno)));
+
+    AreaBlock* area_block = new AreaBlock(addr, size);
+    area_block_to_idx_[area_block] = used_blocks_.size();
+    used_blocks_.push_back(area_block);
+    return area_block;
+  }
+
+  void release_area_block(AreaBlock* area_block) {
+    std::lock_guard<std::mutex> lock(mtx_);
+    area_block->allocated.store(0);
+    free_blocks_.push_back(area_block);
+
+    size_t idx = area_block_to_idx_[area_block];
+    used_blocks_[idx] = used_blocks_.back();
+    area_block_to_idx_[used_blocks_[idx]] = idx;
+    used_blocks_.pop_back();
+    area_block_to_idx_.erase(area_block);
+    area_block = nullptr;
+  }
+
+ private:
+  AreaBlockManager() = default;
+  ~AreaBlockManager() {
+    for (auto area_block : free_blocks_) {
+      munmap(const_cast<void*>(area_block->addr), area_block->size);
+      delete area_block;
+    }
+    for (auto area_block : used_blocks_) {
+      munmap(const_cast<void*>(area_block->addr), area_block->size);
+      delete area_block;
+    }
+  }
+
+  std::mutex mtx_;
+  std::vector<AreaBlock*> used_blocks_;
+  std::unordered_map<AreaBlock*, size_t> area_block_to_idx_;
+  std::list<AreaBlock*> free_blocks_;
+};
+
+inline size_t align_up(size_t x, size_t align) {
+  if (align == 0) [[unlikely]] {
+    return x;
+  }
+  size_t mask = align - 1;
+  return (x + mask) & ~mask;
+}
+}  // namespace area
+
+// 归还给 AreaBlockManager
+BatchArea::~BatchArea() {
+  for (auto area_block : area_blocks_) {
+    area::AreaBlockManager::Instance()->release_area_block(area_block);
+  }
+}
+
+void* BatchArea::allocate(size_t size, size_t align) {
+  const auto alloc_area_block_func = [&]() {
+    size_t alloc_size = std::max(area::align_up(size, align), pre_alloc_size_);
+    area_blocks_.push_back(area::AreaBlockManager::Instance()->allocate_area_block(alloc_size));
+  };
+
+  if (area_blocks_.empty()) {
+    alloc_area_block_func();
+  }
+
+  size_t next_alloc = area::align_up(area_blocks_.back()->allocated.load(), align);
+  if (next_alloc + size > area_blocks_.back()->size) {
+    alloc_area_block_func();
+    next_alloc = 0;
+  }
+
+  return reinterpret_cast<char*>(area_blocks_.back()->addr) + next_alloc;
+}
+}  // namespace data_flow

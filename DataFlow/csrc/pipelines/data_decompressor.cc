@@ -15,7 +15,10 @@ DataDecompressor::DataDecompressor(const std::shared_ptr<DataPipeline>& data_pip
   input_ = data_pipeline;
 }
 
-DataDecompressor::~DataDecompressor() { VLOG(1) << "[DataDecompressor] destructor"; }
+DataDecompressor::~DataDecompressor() { 
+  std::cerr << "test destructor" << std::endl;
+  LOG(INFO) << "[DataDecompressor] destructor";
+  VLOG(1) << "[DataDecompressor] destructor"; }
 
 std::shared_ptr<StreamMeta> DataDecompressor::output_stream_meta() const {
   static std::shared_ptr<StreamMeta> meta = std::make_shared<InflateStreamMeta>();
@@ -23,10 +26,11 @@ std::shared_ptr<StreamMeta> DataDecompressor::output_stream_meta() const {
 }
 
 absl::StatusOr<std::shared_ptr<Stream>> DataDecompressor::next() {
+  HANDLE_DATAFLOW_ERRORS
   auto status_or_stream = input_->next();
-  if (!status_or_stream.ok()) {
-    return status_or_stream.status();
-  }
+  DATAFLOW_THROW_IF(!status_or_stream.ok(), std::string(status_or_stream.status().message()));
+
+  //DATAFLOW_THROW_IF(true, "");
 
   auto stream = status_or_stream.value();
   if (stream == nullptr) {
@@ -37,6 +41,7 @@ absl::StatusOr<std::shared_ptr<Stream>> DataDecompressor::next() {
   auto decompress_stream =
       std::make_shared<InflateStream>(std::dynamic_pointer_cast<ByteStream>(stream));
   return decompress_stream;
+  END_HANDLE_DATAFLOW_ERRORS
 }
 
 PyObject* DataDecompressor::as_python_object(std::shared_ptr<Stream> stream) const {

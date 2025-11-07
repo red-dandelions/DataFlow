@@ -5,10 +5,15 @@ from .stream import (
     ByteStream,
     InflateStreamMeta,
     InflateStream,
+    DenseColumn,
+    SparseColumn,
+    BatchRowMeta,
+    BatchRow,
 )
 
 from .pipeline import (
     DataPipeline,
     DataReader,
     DataDecompressor,
+    DataTextParser,
 )

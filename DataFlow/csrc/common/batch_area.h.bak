@@ -1,0 +1,31 @@
+// 11.5
+#include <cstddef>
+#include <vector>
+
+#include "macros.h"
+
+namespace data_flow {
+struct AreaBlock;
+
+class BatchArea {
+ public:
+  DISABLE_COPY_AND_ASSIGN(BatchArea);
+  DISABLE_MOVE_AND_ASSIGN(BatchArea);
+
+  explicit BatchArea(size_t pre_alloc_size = 128 * 1024) : pre_alloc_size_(pre_alloc_size) {}
+
+  ~BatchArea();
+
+  void* allocate(size_t size, size_t align);
+
+  template <typename T>
+  T* aligned_allocate(size_t size) {
+    return interpret_cast<T*>(allocate(size, alignof(T)));
+  }
+
+ private:
+  std::vector<AreaBlock*> area_blocks_;
+  const size_t pre_alloc_size_;
+};
+
+}  // namespace data_flow

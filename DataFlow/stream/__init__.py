@@ -2,7 +2,7 @@ import DataFlow.csrc.pybind_module as _pym
 import DataFlow.utils.api_export as api_export
 from .byte_stream import ByteStreamMeta, ByteStream
 from .inflate_stream import InflateStreamMeta, InflateStream
-
+from .batch_row import DenseColumn, SparseColumn, BatchRowMeta, BatchRow
 
 @api_export(impl=_pym.StreamMeta)
 class StreamMeta:

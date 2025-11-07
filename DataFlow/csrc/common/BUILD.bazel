@@ -11,7 +11,9 @@ cc_library(
     cxxopts = ["-g"],
     visibility = ["//visibility:public"],
     deps = [
+        "@abseil-cpp//absl/strings:str_format",
         "@libbacktrace",
         "@libunwind",
     ],
+    alwayslink = True,
 )

@@ -11,5 +11,4 @@ build --cxxopt=-g
 build --compilation_mode=dbg
 build:debug --cxxopt=-UNDEBUG
 build:release --cxxopt=-DNDEBUG
-
-# build --features=thin_lto
+build:opt --features=thin_lto

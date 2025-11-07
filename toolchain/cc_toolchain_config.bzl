@@ -15,6 +15,12 @@ all_link_actions = [
     ACTION_NAMES.cpp_link_nodeps_dynamic_library,
 ]
 
+lto_index_actions = [
+    ACTION_NAMES.lto_index_for_executable,
+    ACTION_NAMES.lto_index_for_dynamic_library,
+    ACTION_NAMES.lto_index_for_nodeps_dynamic_library,
+]
+
 def _impl(ctx):
     tool_paths = [
         tool_path(
@@ -51,6 +57,73 @@ def _impl(ctx):
         ),
     ]
 
+    thinlto_feature = feature(
+        name = "thin_lto",
+        enabled = False,  # 手动开启
+        flag_sets = [
+            flag_set(
+                actions = [
+                    ACTION_NAMES.c_compile,
+                    ACTION_NAMES.cpp_compile,
+                ] + all_link_actions + lto_index_actions,
+                flag_groups = [
+                    flag_group(flags = ["-fuse-ld=/usr/bin/ld.lld-20", "-Wno-unused-command-line-argument"]),
+                    flag_group(flags = ["-flto=thin"]),
+                    flag_group(
+                        expand_if_available = "lto_indexing_bitcode_file",
+                        flags = [
+                            "-Xclang",
+                            "-fthin-link-bitcode=%{lto_indexing_bitcode_file}",
+                        ],
+                    ),
+                ],
+            ),
+            flag_set(
+                actions = [ACTION_NAMES.linkstamp_compile],
+                flag_groups = [
+                    flag_group(flags = ["-DBUILD_LTO_TYPE=thin"]),
+                ],
+            ),
+            flag_set(
+                actions = lto_index_actions,
+                flag_groups = [
+                    flag_group(flags = [
+                        "-flto=thin",
+                        "-Wl,-plugin-opt,thinlto-index-only%{thinlto_optional_params_file}",
+                        "-Wl,-plugin-opt,thinlto-emit-imports-files",
+                        "-Wl,-plugin-opt,thinlto-prefix-replace=%{thinlto_prefix_replace}",
+                    ]),
+                    flag_group(
+                        expand_if_available = "thinlto_object_suffix_replace",
+                        flags = [
+                            "-Wl,-plugin-opt,thinlto-object-suffix-replace=%{thinlto_object_suffix_replace}",
+                        ],
+                    ),
+                    flag_group(
+                        expand_if_available = "thinlto_merged_object_file",
+                        flags = [
+                            "-Wl,-plugin-opt,obj-path=%{thinlto_merged_object_file}",
+                        ],
+                    ),
+                ],
+            ),
+            flag_set(
+                actions = [ACTION_NAMES.lto_backend],
+                flag_groups = [
+                    flag_group(flags = [
+                        "-c",
+                        "-fthinlto-index=%{thinlto_index}",
+                        "-o",
+                        "%{thinlto_output_object_file}",
+                        "-x",
+                        "ir",
+                        "%{thinlto_input_bitcode_file}",
+                    ]),
+                ],
+            ),
+        ],
+    )
+
     # 想使用 LLVM C++ 库，请使用“-lc++”而不是“-lstdc++”。
     features = [
         feature(
@@ -71,9 +144,18 @@ def _impl(ctx):
         ),
     ]
 
+    lto_features = [
+        thinlto_feature,
+        feature(
+            name = "supports_start_end_lib",
+            enabled = True,
+        ),
+    ]
+
     return cc_common.create_cc_toolchain_config_info(
         ctx = ctx,
         features = features,
+        #+ (lto_features if ctx.attr.supports_start_end_lib else []),
         cxx_builtin_include_directories = [
             "/usr/lib/llvm-20/lib/clang/20/include",
             "/usr/include",
@@ -91,6 +173,8 @@ def _impl(ctx):
 
 cc_toolchain_config = rule(
     implementation = _impl,
-    attrs = {},
+    #attrs = {
+    #    "supports_start_end_lib": attr.bool(),
+    #},
     provides = [CcToolchainConfigInfo],
 )

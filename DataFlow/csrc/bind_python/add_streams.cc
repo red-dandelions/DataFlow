@@ -9,8 +9,10 @@
  */
 
 #include <memory>
+#include <sstream>
 
 #include "DataFlow/csrc/module.h"
+#include "DataFlow/csrc/streams/batch_row.h"
 #include "DataFlow/csrc/streams/byte_stream.h"
 #include "DataFlow/csrc/streams/inflate_stream.h"
 
@@ -25,6 +27,10 @@ void add_streams_bindings(pybind11::module& m) {
       });
 
   pybind11::class_<ByteStream, std::shared_ptr<ByteStream>, Stream>(m, "ByteStream")
+      .def(pybind11::init([](std::string file_name, size_t buffer_size) {
+             return std::make_shared<ByteStream>(std::move(file_name), buffer_size);
+           }),
+           pybind11::arg("file_name"), pybind11::arg("buffer_size") = 4096)
       .def_property_readonly("stream_meta",
                              [](std::shared_ptr<ByteStream> self) { return self->stream_meta(); });
 
@@ -38,7 +44,112 @@ void add_streams_bindings(pybind11::module& m) {
       });
 
   pybind11::class_<InflateStream, std::shared_ptr<InflateStream>, Stream>(m, "InflateStream")
+      .def(pybind11::init([](std::shared_ptr<Stream> stream) {
+             return std::make_shared<InflateStream>(std::dynamic_pointer_cast<ByteStream>(stream));
+           }),
+           pybind11::arg("stream"))
       .def_property_readonly(
           "stream_meta", [](std::shared_ptr<InflateStream> self) { return self->stream_meta(); });
+
+  pybind11::enum_<ColumnType>(m, "ColumnType")
+      .value("dense", ColumnType::kDense)
+      .value("sparse", ColumnType::kSparse)
+      .value("string", ColumnType::kString);
+
+  pybind11::class_<Column, std::shared_ptr<Column>>(m, "Column")
+      .def(pybind11::init([](std::string name, pybind11::handle dtype_h, pybind11::tuple shape,
+                             ColumnType column_type) -> Column {
+             auto check_get_dtype = [&]() -> int {
+               auto np = pybind11::module_::import("numpy");
+               // 如果传入的不是 dtype，则先转成 dtype
+               if (!pybind11::hasattr(dtype_h, "num")) {
+                 dtype_h = np.attr("dtype")(dtype_h);
+               }
+               return pybind11::cast<int>(dtype_h.attr("num"));
+             };
+
+             Column column;
+             column.name = name;
+             column.dtype = check_get_dtype();
+             for (auto item : shape) {
+               DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::int_>(item),
+                                 "Shape items must be integers");
+               column.shape.push_back(item.cast<int64_t>());
+             }
+             column.column_type = column_type;
+
+             return column;
+           }),
+           pybind11::arg("name"), pybind11::arg("dtype"), pybind11::arg("shape"),
+           pybind11::arg("column_type"))
+      .def_readonly("name", &Column::name)
+      .def_readonly("dtype", &Column::dtype)
+      .def_property_readonly("shape",
+                             [](const Column& self) {
+                               auto tuple = pybind11::tuple(self.shape.size());
+                               for (size_t i = 0; i < self.shape.size(); ++i) {
+                                 tuple[i] = pybind11::int_(self.shape[i]);
+                               }
+                               return tuple;
+                             })
+      .def_readonly("column_type", &Column::column_type)
+      .def("__str__", [](const Column& self) {
+        std::ostringstream oss;
+        oss << self;
+        return oss.str();
+      });
+
+  pybind11::class_<BatchRowMeta, std::shared_ptr<BatchRowMeta>, StreamMeta>(m, "BatchRowMeta")
+      .def(pybind11::init<>([](pybind11::handle columns_h) {
+             DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::list>(columns_h),
+                               "Expected a list of Column objects");
+
+             pybind11::list columns_list = columns_h.cast<pybind11::list>();
+             std::vector<Column> columns;
+             for (auto item : columns_list) {
+               DATAFLOW_THROW_IF(!pybind11::isinstance<Column>(item),
+                                 "Expected a Column object in the list");
+               columns.push_back(item.cast<Column>());
+             }
+
+             return std::make_shared<BatchRowMeta>(std::move(columns));
+           }),
+           pybind11::arg("columns") = std::vector<Column>{})
+      .def_property_readonly("stream_type_name",
+                             [](std::shared_ptr<BatchRowMeta> self) {
+                               return demangle_str_name(self->stream_type_index().name());
+                             })
+      .def(
+          "get_column_by_name",
+          [](std::shared_ptr<BatchRowMeta> self, const std::string& name) {
+            return self->get_column_by_name(name);
+          },
+          pybind11::return_value_policy::reference)
+      .def(
+          "get_column_by_index",
+          [](std::shared_ptr<BatchRowMeta> self, size_t index) {
+            return self->get_column_by_index(index);
+          },
+          pybind11::return_value_policy::reference)
+      .def("__str__", [](const std::shared_ptr<BatchRowMeta> self) {
+        std::ostringstream oss;
+        oss << "BatchRowMeta(original_column_size=" << self->original_column_size
+            << ",size=" << self->columns.size() << ",columnns=" << self->columns << ")";
+        return oss.str();
+      });
+
+  pybind11::class_<BatchRow, std::shared_ptr<BatchRow>, Stream>(m, "BatchRow")
+      .def(pybind11::init([](pybind11::handle batch_row_meta_h) {
+             DATAFLOW_THROW_IF(!pybind11::isinstance<BatchRowMeta>(batch_row_meta_h),
+                               "Expected a BatchRowMeta objects");
+
+             std::shared_ptr<BatchRowMeta> batch_row_meta =
+                 batch_row_meta_h.cast<std::shared_ptr<BatchRowMeta>>();
+
+             return std::make_shared<BatchRow>(batch_row_meta);
+           }),
+           pybind11::arg("batch_row_meta"))
+      .def_property_readonly("stream_meta",
+                             [](std::shared_ptr<BatchRow> self) { return self->stream_meta(); });
 }
 }  // namespace data_flow

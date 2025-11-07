@@ -1,6 +1,7 @@
 
 
 #include "byte_stream.h"
+#include "glog/logging.h"
 
 namespace data_flow {
 
@@ -16,10 +17,13 @@ ByteStream::ByteStream(std::string&& file_name, size_t buffer_size)
 }
 
 ByteStream::~ByteStream() {
+  LOG(INFO) << "[ByteStream] destructor";
   if (local_file_) {
     std::fclose(local_file_);
   }
+  if (buffer_) {
   delete[] buffer_;
+}
 }
 
 std::shared_ptr<StreamMeta> ByteStream::stream_meta() const {

@@ -63,6 +63,17 @@ void print_stack_trace(int sig) {
 
 void signal_handler(int sig) {
   print_stack_trace(sig);
+    if (std::exception_ptr eptr = std::current_exception()) {
+        try {
+            std::rethrow_exception(eptr);  // 重新抛出异常
+        } catch (const std::exception &e) {
+            std::cerr << "Uncaught std::exception: " << e.what() << "\n";
+        } catch (...) {
+            std::cerr << "Uncaught unknown exception\n";
+        }
+    } else {
+        std::cerr << "No active exception\n";
+    }
   signal(sig, SIG_DFL);  // 恢复默认处理
   raise(sig);            // 再次触发信号，让系统生成 core dump
 }

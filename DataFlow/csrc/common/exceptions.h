@@ -60,6 +60,7 @@ inline std::string format_message(const std::string& msg, size_t width = 70, siz
       oss << "Function:  " << loc.function_name() << "\n";                                         \
       oss << "File:      " << loc.file_name() << ":" << loc.line() << "\n";                        \
       oss << "================================================================================\n"; \
+      std::cerr << oss.str(); \
       throw std::runtime_error(oss.str());                                                         \
     }                                                                                              \
   } while (false)
@@ -68,15 +69,21 @@ inline std::string format_message(const std::string& msg, size_t width = 70, siz
 #define END_HANDLE_DATAFLOW_ERRORS_RET(retval)     \
   }                                                \
   catch (pybind11::error_already_set & e) {        \
+    std::cerr << "pybidn\n";\
     e.restore();                                   \
     return retval;                                 \
   }                                                \
   catch (pybind11::builtin_exception & e) {        \
+    std::cerr << "builtin\n";\
     return retval;                                 \
   }                                                \
   catch (std::exception & e) {                     \
+    std::cerr << "std e\n";\
     PyErr_SetString(PyExc_RuntimeError, e.what()); \
     return retval;                                 \
+  } \
+  catch(...) {\
+    std::cerr << "thoen\n";\
   }
 #define END_HANDLE_DATAFLOW_ERRORS END_HANDLE_DATAFLOW_ERRORS_RET(nullptr)
 

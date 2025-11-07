@@ -18,7 +18,10 @@ InflateStream::InflateStream(std::shared_ptr<Stream> stream) {
   inflate_stream_init();
 }
 
-InflateStream::~InflateStream() { inflateEnd(&z_stream_); }
+InflateStream::~InflateStream() { 
+  LOG(INFO) << "[InflateStream] destructor";
+  inflateEnd(&z_stream_);
+}
 
 std::shared_ptr<StreamMeta> InflateStream::stream_meta() const {
   return std::make_shared<InflateStreamMeta>();

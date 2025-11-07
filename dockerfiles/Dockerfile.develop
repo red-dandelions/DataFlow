@@ -8,7 +8,9 @@ RUN apt-get update &&\
 # 安装 clang
 ARG CLANG_VERSION=20
 RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh ${CLANG_VERSION} all && rm llvm.sh
-
+RUN ln -sf $(which clangd-${CLANG_VERSION}) /usr/local/bin/clangd && \
+    ln -sf $(which clangd-${CLANG_VERSION}) /usr/bin/clangd
+    
 # 编译安装 python3.11
 #
 # * 安装在 /usr/local 路径下
