@@ -14,7 +14,6 @@ class InflateStreamMeta:
 
 @api_export(impl=_pym.InflateStream)
 class InflateStream:
-    """ Metadata class for ByteStream data objects."""
     def __init__(self):
         raise NotImplementedError("InflateStream is implemented in C++ extension.")
     

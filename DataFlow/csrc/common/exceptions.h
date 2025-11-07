@@ -56,17 +56,22 @@ inline std::string format_message(const std::string& msg, size_t width = 70, siz
   } while (false)
 
 #define HANDLE_DATAFLOW_ERRORS try {
-#define END_HANDLE_DATAFLOW_ERRORS_RET(retval)     \
-  }                                                \
-  catch (pybind11::error_already_set & e) {        \
-    e.restore();                                   \
-    return retval;                                 \
-  }                                                \
-  catch (pybind11::builtin_exception & e) {        \
-    return retval;                                 \
-  }                                                \
-  catch (std::exception & e) {                     \
-    PyErr_SetString(PyExc_RuntimeError, e.what()); \
-    return retval;                                 \
+#define END_HANDLE_DATAFLOW_ERRORS_RET(retval)            \
+  }                                                       \
+  catch (pybind11::error_already_set & e) {               \
+    e.restore();                                          \
+    return retval;                                        \
+  }                                                       \
+  catch (pybind11::builtin_exception & e) {               \
+    e.set_error();                                        \
+    return retval;                                        \
+  }                                                       \
+  catch (std::exception & e) {                            \
+    PyErr_SetString(PyExc_RuntimeError, e.what());        \
+    return retval;                                        \
+  }                                                       \
+  catch (...) {                                           \
+    PyErr_SetString(PyExc_RuntimeError, "unknown error"); \
+    return retval;                                        \
   }
 #define END_HANDLE_DATAFLOW_ERRORS END_HANDLE_DATAFLOW_ERRORS_RET(nullptr)

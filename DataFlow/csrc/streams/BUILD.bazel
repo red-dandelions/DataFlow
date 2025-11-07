@@ -2,7 +2,10 @@ load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
 
 pybind_library(
     name = "streams",
-    srcs = glob(["*.cc"], allow_empty = True),
+    srcs = glob(
+        ["*.cc"],
+        allow_empty = True,
+    ),
     hdrs = glob(["*.h"]),
     copts = ["-g"],
     visibility = ["//visibility:public"],
