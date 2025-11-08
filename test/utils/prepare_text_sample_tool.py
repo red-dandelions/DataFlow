@@ -21,7 +21,7 @@ sample_num = 1000
 dense_slots_num = 30
 sparse_slots_num = 20
 max_dense_size = 13
-output_file = 'text_sample.gz'
+output_file = 'text_sample_v2.gz'
 
 dense_slots = {random.randint(1, 100): (random.randint(0, max_dense_size),) for _ in range(dense_slots_num)}
 sparse_slots = [random.randint(1000, 2000) for _ in range(sparse_slots_num)]
@@ -85,5 +85,11 @@ def generate_text_sample():
 
 if __name__ == "__main__":
     infos = generate_text_sample()
-    #for info in infos[:2]:
-    #    print(info)
+
+    print("columns = [")
+    for slot, shape in dense_slots.items():
+        print(f'DenseColumn(name="{slot}", dtype=np.float32, shape={shape}),')
+    print("] + [")
+    for sparse_slot in sparse_slots:
+        print(f'SparseColumn(name="{sparse_slot}", dtype=np.int64, shape=(-1,)),')
+    print("]")

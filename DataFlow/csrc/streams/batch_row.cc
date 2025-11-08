@@ -2,14 +2,30 @@
 
 #include "batch_row.h"
 
+#include <cstdint>
 #include <memory>
+
+#include "DataFlow/csrc/common/exceptions.h"
 
 namespace data_flow {
 
 BatchRowMeta::BatchRowMeta(std::vector<Column>&& _columns)
     : original_column_size(_columns.size()), columns(_columns) {
+  std::sort(columns.begin(), columns.end(), [](const Column& a, const Column& b) {
+    return a.column_type < b.column_type;
+  });
   for (size_t i = 0; i < columns.size(); ++i) {
     column_name_to_index[columns[i].name] = i;
+    int64_t item_count = 1;
+    for (auto v : columns[i].shape) {
+      item_count *= v;
+      if (item_count < 0) {
+        break;
+      }
+    }
+    if (item_count >= 0) {
+      columns[i].item_count = item_count;
+    }
   }
 }
 
@@ -27,8 +43,7 @@ const Column& BatchRowMeta::get_column_by_index(size_t index) const {
   return columns[index];
 }
 
-BatchRow::BatchRow(std::shared_ptr<BatchRowMeta> batch_row_meta)
-    : batch_row_meta_(batch_row_meta) {
+BatchRow::BatchRow(std::shared_ptr<BatchRowMeta> batch_row_meta) : batch_row_meta_(batch_row_meta) {
   column_blocks_ = std::make_unique<ColumnBlock[]>(batch_row_meta_->original_column_size);
 }
 
@@ -48,6 +63,39 @@ BatchRow::ColumnBlock* BatchRow::get_column_block(size_t index) {
   }
 
   return &column_blocks_[index];
+}
+
+void* BatchRow::alloc_column_block_data(size_t index, size_t byte_size) {
+  auto column_block = get_column_block(index);
+  const auto& column = batch_row_meta_->columns[index];
+
+  column_block->byte_size = byte_size;
+  if (byte_size <= 8) {
+    return &column_block->packed_data;
+  }
+
+  switch (column.column_type) {
+    case ColumnType::kDense: {
+      void* addr = area_.align_allocate<float>(byte_size);
+      column_block->ptr = addr;
+      break;
+    }
+    case ColumnType::kSparse: {
+      void* addr = area_.align_allocate<uint64_t>(byte_size);
+      column_block->ptr = addr;
+      break;
+    }
+    case data_flow::ColumnType::kString: {
+      void* addr = area_.align_allocate<char>(byte_size);
+      column_block->ptr = addr;
+      break;
+    }
+    default: {
+      DATAFLOW_THROW_IF(true, "should not be here");
+    }
+  }
+
+  return column_block->ptr;
 }
 
 }  // namespace data_flow

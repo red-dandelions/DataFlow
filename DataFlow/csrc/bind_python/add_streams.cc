@@ -9,6 +9,8 @@
  */
 
 #include <memory>
+#include <sstream>
+#include <string_view>
 
 #include "DataFlow/csrc/module.h"
 #include "DataFlow/csrc/streams/batch_row.h"
@@ -148,6 +150,48 @@ void add_streams_bindings(pybind11::module& m) {
            }),
            pybind11::arg("batch_row_meta"))
       .def_property_readonly("stream_meta",
-                             [](std::shared_ptr<BatchRow> self) { return self->stream_meta(); });
+                             [](std::shared_ptr<BatchRow> self) { return self->stream_meta(); })
+      .def("__str__", [](std::shared_ptr<BatchRow> self) {
+        const auto& meta = std::dynamic_pointer_cast<BatchRowMeta>(self->stream_meta());
+
+        std::ostringstream oss;
+        // oss << meta;
+        oss << "{\n";
+
+        for (size_t i = 0; i < meta->columns.size(); ++i) {
+          const auto& column = meta->columns[i];
+          const auto b = self->get_column_block(i);
+
+          oss << "\"" << column.name << "\": [";
+          if (column.column_type == ColumnType::kDense) {
+            size_t item_count = b->byte_size / sizeof(float);
+            for (size_t i = 0; i < item_count; ++i) {
+              oss << reinterpret_cast<float*>(b->byte_size > 8 ? b->ptr : &b->packed_data)[i];
+              if (i != item_count - 1) {
+                oss << ",";
+              }
+            }
+          } else if (column.column_type == ColumnType::kSparse) {
+            size_t item_count = b->byte_size / sizeof(int64_t);
+            for (size_t i = 0; i < item_count; ++i) {
+              oss << reinterpret_cast<int64_t*>(b->byte_size > 8 ? b->ptr : &b->packed_data)[i];
+              if (i != item_count - 1) {
+                oss << ",";
+              }
+            }
+          } else {
+            std::string_view data = std::string_view(
+                reinterpret_cast<char*>(b->byte_size > 8 ? b->ptr : &b->packed_data), b->byte_size);
+            oss << data << "]";
+          }
+
+          oss << "]";
+          if (i != meta->columns.size() - 1) {
+            oss << ",\n";
+          }
+        }
+        oss << "\n}";
+        return oss.str();
+      });
 }
 }  // namespace data_flow

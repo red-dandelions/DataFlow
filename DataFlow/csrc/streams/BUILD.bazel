@@ -10,6 +10,7 @@ pybind_library(
     copts = ["-g"],
     visibility = ["//visibility:public"],
     deps = [
+        "//DataFlow/csrc/batch",
         "//DataFlow/csrc/core",
         "@zlib",
     ],

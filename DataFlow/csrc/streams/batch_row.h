@@ -3,13 +3,14 @@
 #pragma once
 
 #include <cstdint>
+#include <string_view>
 #include <memory>
 #include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-//#include "DataFlow/csrc/common/batch_area.h"
+#include "DataFlow/csrc/batch/batch_row_area.h"
 #include "DataFlow/csrc/core/stream.h"
 
 namespace data_flow {
@@ -22,12 +23,13 @@ struct Column {
   int32_t dtype;
   std::vector<int64_t> shape;
   ColumnType column_type;
+  int64_t item_count = -1;
 };
 
 struct BatchRowMeta final : public StreamMetaBind<BatchRow> {
   const size_t original_column_size;
   std::vector<Column> columns;
-  std::unordered_map<std::string, size_t> column_name_to_index;
+  std::unordered_map<std::string_view, size_t> column_name_to_index;
 
   explicit BatchRowMeta(std::vector<Column>&& _columns);
 
@@ -41,9 +43,9 @@ struct BatchRowMeta final : public StreamMetaBind<BatchRow> {
 class BatchRow final : public Stream {
  public:
   struct alignas(16) ColumnBlock {
-    size_t data_size;
+    size_t byte_size = 0;
     union {
-      void* ptr;
+      void* ptr = nullptr;
       int64_t offset;
       int64_t packed_data;
     };
@@ -59,14 +61,14 @@ class BatchRow final : public Stream {
   void* ptr() final;
 
   ColumnBlock* get_column_block(size_t index);
-  //void* update_column_block_data(size_t index, size_t data_size, void* data);
+  void* alloc_column_block_data(size_t index, size_t data_size);
 
  private:
   int32_t column_block_size_;
   std::unique_ptr<ColumnBlock[]> column_blocks_;
   std::unique_ptr<ColumnBlock[]> external_column_blocks_;
   std::shared_ptr<BatchRowMeta> batch_row_meta_;
-  //BatchArea area_;
+  BatchRowArea area_;
 };
 
 inline std::string to_string(const ColumnType& column_type) {
@@ -114,4 +116,5 @@ inline std::ostream& operator<<(std::ostream& os, const std::vector<Column>& col
   os << "]";
   return os;
 }
+
 }  // namespace data_flow

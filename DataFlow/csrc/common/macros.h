@@ -20,4 +20,5 @@ namespace data_flow {
   ClassName(ClassName&&) = delete;                 \
   ClassName& operator=(ClassName&&) = delete;
 
+#define ALIGN_SIZE(size, align) (((size) + (align) - 1) & ~((align) - 1))
 }  // namespace data_flow
