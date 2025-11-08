@@ -119,9 +119,22 @@ void add_streams_bindings(pybind11::module& m) {
              END_HANDLE_DATAFLOW_ERRORS
            }),
            pybind11::arg("columns"))
-      .def_property_readonly("stream_type_name", [](std::shared_ptr<BatchRowMeta> self) {
-        return demangle_str_name(self->stream_type_index().name());
-      });
+      .def_property_readonly("stream_type_name",
+                             [](std::shared_ptr<BatchRowMeta> self) {
+                               return demangle_str_name(self->stream_type_index().name());
+                             })
+      .def(
+          "get_column_by_name",
+          [](std::shared_ptr<BatchRowMeta> self, const std::string& name) {
+            return self->get_column_by_name(name);
+          },
+          pybind11::arg("name"))
+      .def(
+          "get_column_by_index",
+          [](std::shared_ptr<BatchRowMeta> self, size_t index) {
+            return self->get_column_by_index(index);
+          },
+          pybind11::arg("index"));
 
   pybind11::class_<BatchRow, std::shared_ptr<BatchRow>, Stream>(m, "BatchRow")
       .def(pybind11::init([](pybind11::handle batch_row_meta_h) -> std::shared_ptr<BatchRow> {

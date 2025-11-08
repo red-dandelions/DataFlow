@@ -13,6 +13,7 @@
 
 #include "DataFlow/csrc/core/data_pipeline.h"
 #include "DataFlow/csrc/streams/batch_row.h"
+#include "DataFlow/csrc/streams/inflate_stream.h"
 
 namespace data_flow {
 
@@ -32,14 +33,18 @@ class DataTextParser final : public DataPipeline {
   std::string_view try_read_line_from_inflate_stream();
   void try_parse_line(std::shared_ptr<BatchRow> batch_row, std::string_view line);
 
+  std::shared_ptr<BatchRowMeta> output_stream_meta_;
+
   std::shared_ptr<DataPipeline> input_pipeline_;
-  std::shared_ptr<Stream> inflate_stream_;
+  std::shared_ptr<InflateStream> inflate_stream_;
+  std::span<const char> chunk_buffer_;
+  std::string line_buffer_;
+  size_t chunk_offset_ = 0;
+
 
   std::vector<std::string> format_fields_;
   const char field_delim_;
-  std::shared_ptr<BatchRowMeta> output_stream_meta_;
-  std::span<const char> buffer_;
-  size_t buffer_pos_ = 0;
+  
   const size_t kPerParseSize = 20 * 1024;
 };
 }  // namespace data_flow

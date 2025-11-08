@@ -2,6 +2,7 @@ import DataFlow.csrc.pybind_module as _pym
 import DataFlow.utils.api_export as api_export
 from .data_reader import DataReader
 from .data_decompressor import DataDecompressor
+from .data_text_parser import DataTextParser
 
 @api_export(impl=_pym.DataPipeline)
 class DataPipeline:

@@ -22,8 +22,8 @@ class TestModule(unittest.TestCase):
         batch_row_meta = DataFlow.BatchRowMeta(columns)
         batch_row = DataFlow.BatchRow(batch_row_meta)
         print(batch_row_meta)
-        #print("dense column from meta:", batch_row_meta.get_column_by_name("dense_feature"))
-        #print("sparse column from meta:", batch_row_meta.get_column_by_index(1))
+        print("dense column from meta:", batch_row_meta.get_column_by_name("dense_feature"))
+        print("sparse column from meta:", batch_row_meta.get_column_by_index(1))
 
 
 

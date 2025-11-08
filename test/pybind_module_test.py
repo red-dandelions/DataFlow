@@ -17,15 +17,15 @@ class TestModule(unittest.TestCase):
     def test_DataReader(self):
         file_list = ["/home/ubuntu/code/DataFlow/test/utils/text_sample.gz"]
 
-        d = df_module.DataReader(file_list, source=df_module.DataReader.Source.kFileList)
-        d = df_module.DataDecompressor(d)
+        d = DataFlow.DataReader(file_list, source=df_module.DataReader.Source.kFileList)
+        d = DataFlow.DataDecompressor(d)
+        d = DataFlow.DataTextParser(d, format="sample_id|group_id|dense|sparse|label|timestamp")
         cnt = 0
-        print("python before create iterator")
         for i in d:
             print("s: ", i)
             cnt += 1
-            if cnt >= 5:
-                break
+            #if cnt >= 5:
+            #    break
         print(d)
 
 

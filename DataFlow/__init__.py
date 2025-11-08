@@ -17,4 +17,5 @@ from .pipeline import (
     DataPipeline,
     DataReader,
     DataDecompressor,
+    DataTextParser,
 )

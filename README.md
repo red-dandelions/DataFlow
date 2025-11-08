@@ -92,7 +92,7 @@ bazel build //...
 # 运行测试
 bazel test //...
 
-# 生成编译命令数据库(用于 IDE 支持)
+# (用于 IDE 支持)
 bazel run @hedron_compile_commands//:refresh_all
 
 # 格式化 BUILD 文件
