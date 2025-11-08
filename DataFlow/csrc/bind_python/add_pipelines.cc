@@ -15,6 +15,7 @@
 #include "pybind11/stl.h"
 #include "pybind11/stl_bind.h"
 
+#include "DataFlow/csrc/common/exceptions.h"
 #include "DataFlow/csrc/module.h"
 #include "DataFlow/csrc/pipelines/data_decompressor.h"
 #include "DataFlow/csrc/pipelines/data_reader.h"
@@ -78,7 +79,7 @@ void add_pipelines_bindings(pybind11::module& m) {
   pybind11::class_<DataTextParser, std::shared_ptr<DataTextParser>, DataPipeline>(m,
                                                                                   "DataTextParser")
       .def(pybind11::init([](pybind11::handle input_h, const std::string& format,
-                             pybind11::handle columns_h,
+                             pybind11::handle columns_h, pybind11::handle external_data_h,
                              const char field_delim) -> std::shared_ptr<DataTextParser> {
              HANDLE_DATAFLOW_ERRORS
              DATAFLOW_THROW_IF(!pybind11::isinstance<DataPipeline>(input_h),
@@ -96,12 +97,27 @@ void add_pipelines_bindings(pybind11::module& m) {
                columns.push_back(item.cast<Column>());
              }
 
+             DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::list>(external_data_h),
+                               "Expected a list of axternal_data");
+
+             pybind11::list external_data_list = external_data_h.cast<pybind11::list>();
+             std::unordered_set<std::string> external_data;
+             for (auto item : external_data_h) {
+               for (auto item : external_data_list) {
+                 DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::str>(item),
+                                   "Expected a string in external_data list");
+                 std::string key = item.cast<std::string>();
+                 external_data.emplace(std::move(key));
+               }
+             }
+
              return std::make_shared<DataTextParser>(input_pipeline, format, std::move(columns),
-                                                     field_delim);
+                                                     std::move(external_data), field_delim);
              END_HANDLE_DATAFLOW_ERRORS
            }),
            pybind11::arg("input"), pybind11::arg("format"),
-           pybind11::arg("columns") = std::vector<Column>{}, pybind11::arg("field_delim") = '|')
+           pybind11::arg("columns") = std::vector<Column>{},
+           pybind11::arg("external_data") = pybind11::list(), pybind11::arg("field_delim") = '|')
       .def_property_readonly("output_stream_meta", &DataTextParser::output_stream_meta)
       .def("__iter__", [](std::shared_ptr<DataTextParser> self) -> pybind11::object {
         HANDLE_DATAFLOW_ERRORS

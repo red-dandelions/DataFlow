@@ -24,7 +24,9 @@ namespace data_flow {
 class DataTextParser final : public DataPipeline {
  public:
   explicit DataTextParser(std::shared_ptr<DataPipeline> pipeline, const std::string& format,
-                          std::vector<Column>&& columns, const char field_delim = '|');
+                          std::vector<Column>&& columns,
+                          std::unordered_set<std::string>&& external_data,
+                          const char field_delim = '|');
   ~DataTextParser() final;
 
   std::shared_ptr<StreamMeta> output_stream_meta() const final;
@@ -57,7 +59,7 @@ class DataTextParser final : public DataPipeline {
   const char slot_delim_ = ';';
   const char value_delim_ = ',';
   const char id_weight_delim_ = ':';
-  std::unordered_map<std::string, std::string> external_data_;
+  std::unordered_set<std::string> external_data_;
 
   const size_t kPerParseSize = 64 * 1024;
 };

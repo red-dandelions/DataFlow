@@ -55,3 +55,6 @@ class BatchRow:
     @property
     def stream_meta(self) -> BatchRowMeta:
         raise NotImplementedError("stream_meta is implemented in C++ extension.")
+
+    def __str__(self) -> str:
+        raise NotImplementedError("__str__ is implemented in C++ extension.")

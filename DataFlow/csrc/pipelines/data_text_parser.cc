@@ -6,7 +6,9 @@
 #include <cstdlib>
 #include <memory>
 #include <span>
+#include <string>
 #include <string_view>
+#include <unordered_map>
 
 #include "absl/strings/numbers.h"
 #include "absl/strings/str_split.h"
@@ -38,8 +40,10 @@ PyObject* DataTextParser::as_python_object(std::shared_ptr<Stream> stream) const
 }
 
 DataTextParser::DataTextParser(std::shared_ptr<DataPipeline> pipeline, const std::string& format,
-                               std::vector<Column>&& columns, const char field_delim)
-    : field_delim_(field_delim) {
+                               std::vector<Column>&& columns,
+                               std::unordered_set<std::string>&& external_data,
+                               const char field_delim)
+    : field_delim_(field_delim), external_data_(std::move(external_data)) {
   DATAFLOW_THROW_IF(
       pipeline->output_stream_meta()->stream_type_index() != typeid(InflateStream),
       absl::StrFormat(
@@ -149,8 +153,8 @@ void DataTextParser::try_parse_line(std::shared_ptr<BatchRow> batch_row, std::st
       skip_filed_func();
       auto iter = external_data_.find(field_name);
       if (iter != external_data_.end()) {
-        iter->second = std::string(
-            std::string_view(line.data() + beg_field_pos, end_field_pos - beg_field_pos));
+        batch_row->set_external_data(
+            *iter, std::string_view(line.data() + beg_field_pos, end_field_pos - beg_field_pos));
       }
     } else {
       if (field_name == dense_slot_field_) {

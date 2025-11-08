@@ -4,7 +4,7 @@ from DataFlow.stream import BatchRowMeta
 
 @api_export(impl=_pym.DataTextParser)
 class DataTextParser:
-    def __init__(self, input, format, columns, field_delim):
+    def __init__(self, input, format, columns, external_data, field_delim):
         raise NotImplementedError("DataTextParser is implemented in C++ extension.")
     
     def __iter__(self):

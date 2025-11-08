@@ -3,10 +3,10 @@
 #pragma once
 
 #include <cstdint>
-#include <string_view>
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -63,11 +63,18 @@ class BatchRow final : public Stream {
   ColumnBlock* get_column_block(size_t index);
   void* alloc_column_block_data(size_t index, size_t data_size);
 
+  void set_external_data(const std::string& key, const std::string_view value) {
+    external_data_[key] = std::string(value);
+  }
+
+  std::unordered_map<std::string, std::string> external_data() { return external_data_; }
+
  private:
   int32_t column_block_size_;
   std::unique_ptr<ColumnBlock[]> column_blocks_;
   std::unique_ptr<ColumnBlock[]> external_column_blocks_;
   std::shared_ptr<BatchRowMeta> batch_row_meta_;
+  std::unordered_map<std::string, std::string> external_data_;
   BatchRowArea area_;
 };
 

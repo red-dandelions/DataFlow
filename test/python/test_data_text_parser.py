@@ -65,7 +65,7 @@ class TestModule(unittest.TestCase):
         ]
         d = DataReader(file_list, source=DataReader.Source.kFileList)
         d = DataDecompressor(d)
-        d = DataTextParser(d, format="sample_id|group_id|sparse|dense|label|timestamp", columns=columns)
+        d = DataTextParser(d, format="sample_id|group_id|sparse|dense|label|timestamp", columns=columns, external_data=["sample_id", "timestamp"])
         cnt = 0
         for i in d:
             print(f"batch_row {cnt}: ", i)
