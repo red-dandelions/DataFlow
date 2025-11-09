@@ -6,12 +6,21 @@ from DataFlow import (
     DataReader,
     DataDecompressor,
     DataTextParser,
+    DataBatchRowAdder,
 )
 import DataFlow
 import numpy as np
 
 class TestModule(unittest.TestCase):
-    def test_DataTextParser(self):
+    def test_DataPipeline(self):
+        def func(sample_id, timestamp, slot_61, slot_1399):
+            #print(sample_id, timestamp)
+            #print(slot_61)
+            #print(slot_1399)
+            #print(type(slot_61))
+            #print(type(slot_1399))
+            return np.array([1], dtype=np.int64)
+
         file_list = ["/home/ubuntu/code/DataFlow/test/utils/text_sample_v2.gz"]
         # 生成文件时，从打印日志里复制过来
         columns = [
@@ -66,15 +75,16 @@ class TestModule(unittest.TestCase):
         d = DataReader(file_list, source=DataReader.Source.kFileList)
         d = DataDecompressor(d)
         d = DataTextParser(d, format="sample_id|group_id|sparse|dense|label|timestamp", columns=columns, external_data=["sample_id", "timestamp"])
+        d = DataBatchRowAdder(d, func, ["sample_id", "timestamp", "61", "1399"], [SparseColumn(name="1", dtype=np.int64, shape=(1,))])
         cnt = 0
         for i in d:
-            print(f"batch_row {cnt}: ", i)
+            #print(f"batch_row {cnt}: ", i)
             cnt += 1
             if cnt >= 5:
                 break
-        print(d)
+        #print(d)
 
 
 if __name__ == "__main__":
-    #input()
+    # input()
     unittest.main()

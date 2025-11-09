@@ -8,6 +8,7 @@ build --cxxopt=-D_GLIBCXX_USE_CXX11_ABI=1
 build --cxxopt=-fPIC
 
 
+build --compilation_mode=dbg
 build:debug --cxxopt=-UNDEBUG
 build:release --cxxopt=-DNDEBUG
 

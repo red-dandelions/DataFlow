@@ -72,15 +72,15 @@ void add_streams_bindings(pybind11::module& m) {
                return pybind11::cast<int>(dtype_h.attr("num"));
              };
 
-             Column column;
-             column.name = name;
-             column.dtype = check_get_dtype();
+             std::vector<int64_t> column_shape;
              for (auto item : shape) {
                DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::int_>(item),
                                  "Shape items must be integers");
-               column.shape.push_back(item.cast<int64_t>());
+               column_shape.push_back(item.cast<int64_t>());
              }
-             column.column_type = column_type;
+
+             Column column(std::move(name), check_get_dtype(), std::move(column_shape),
+                           column_type);
 
              return column;
            }),

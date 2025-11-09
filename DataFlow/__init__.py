@@ -18,4 +18,5 @@ from .pipeline import (
     DataReader,
     DataDecompressor,
     DataTextParser,
+    DataBatchRowAdder,
 )

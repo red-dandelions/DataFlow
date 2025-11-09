@@ -17,6 +17,7 @@
 
 #include "DataFlow/csrc/common/exceptions.h"
 #include "DataFlow/csrc/module.h"
+#include "DataFlow/csrc/pipelines/data_batch_row_adder.h"
 #include "DataFlow/csrc/pipelines/data_decompressor.h"
 #include "DataFlow/csrc/pipelines/data_reader.h"
 #include "DataFlow/csrc/pipelines/data_text_parser.h"
@@ -120,6 +121,52 @@ void add_pipelines_bindings(pybind11::module& m) {
            pybind11::arg("external_data") = pybind11::list(), pybind11::arg("field_delim") = '|')
       .def_property_readonly("output_stream_meta", &DataTextParser::output_stream_meta)
       .def("__iter__", [](std::shared_ptr<DataTextParser> self) -> pybind11::object {
+        HANDLE_DATAFLOW_ERRORS
+        auto obj = GetDataPipelineIterator(std::reinterpret_pointer_cast<DataPipeline>(self));
+        return pybind11::reinterpret_borrow<pybind11::object>(obj);
+        END_HANDLE_DATAFLOW_ERRORS_RET(pybind11::none())
+      });
+
+  pybind11::class_<DataBatchRowAdder, std::shared_ptr<DataBatchRowAdder>, DataPipeline>(
+      m, "DataBatchRowAdder")
+      .def(pybind11::init([](pybind11::handle input_h, pybind11::function fn,
+                             pybind11::handle args_h,
+                             pybind11::handle add_columns_h) -> std::shared_ptr<DataBatchRowAdder> {
+             HANDLE_DATAFLOW_ERRORS
+             DATAFLOW_THROW_IF(!pybind11::isinstance<DataPipeline>(input_h),
+                               "Expected a DataPipeline");
+             auto input_pipeline = input_h.cast<std::shared_ptr<DataPipeline>>();
+
+             DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::list>(args_h),
+                               "Expected a list of str objects");
+             DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::list>(add_columns_h),
+                               "Expected a list of Column objects");
+
+             pybind11::list args_list = args_h.cast<pybind11::list>();
+             std::vector<std::string> args;
+             for (auto item : args_list) {
+               DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::str>(item),
+                                 "Expected a str object in the list");
+               args.push_back(item.cast<std::string>());
+             }
+
+             pybind11::list columns_list = add_columns_h.cast<pybind11::list>();
+             std::vector<Column> columns;
+             for (auto item : columns_list) {
+               DATAFLOW_THROW_IF(!pybind11::isinstance<Column>(item),
+                                 "Expected a Column object in the list");
+               columns.push_back(item.cast<Column>());
+             }
+
+             return std::make_shared<DataBatchRowAdder>(input_pipeline, fn, std::move(args),
+                                                        std::move(columns));
+             END_HANDLE_DATAFLOW_ERRORS
+           }),
+           pybind11::arg("input"), pybind11::arg("fn"),
+           pybind11::arg("args") = std::vector<std::string>{},
+           pybind11::arg("add_columns") = pybind11::list())
+      .def_property_readonly("output_stream_meta", &DataBatchRowAdder::output_stream_meta)
+      .def("__iter__", [](std::shared_ptr<DataBatchRowAdder> self) -> pybind11::object {
         HANDLE_DATAFLOW_ERRORS
         auto obj = GetDataPipelineIterator(std::reinterpret_pointer_cast<DataPipeline>(self));
         return pybind11::reinterpret_borrow<pybind11::object>(obj);

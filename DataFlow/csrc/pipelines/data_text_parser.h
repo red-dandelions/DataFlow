@@ -13,7 +13,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <unordered_map>
+#include <unordered_set>
 
 #include "DataFlow/csrc/core/data_pipeline.h"
 #include "DataFlow/csrc/streams/batch_row.h"

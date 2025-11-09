@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "DataFlow/csrc/batch/batch_row_area.h"
+#include "DataFlow/csrc/common/exceptions.h"
 #include "DataFlow/csrc/core/stream.h"
 
 namespace data_flow {
@@ -18,16 +19,33 @@ class BatchRow;
 
 enum class ColumnType { kDense, kSparse, kString };
 
+// TODO: dtype 模版自动推断 T，替换 float, int64_t
 struct Column {
   std::string name;
   int32_t dtype;
   std::vector<int64_t> shape;
   ColumnType column_type;
   int64_t item_count = -1;
+  Column() = default;
+  Column(std::string&& _name, int32_t _dtype, std::vector<int64_t>&& _shape,
+         ColumnType _column_type)
+      : name(std::move(_name)), dtype(_dtype), shape(std::move(_shape)), column_type(_column_type) {
+    int64_t cnt = 1;
+    for (auto v : shape) {
+      cnt *= v;
+      if (cnt < 0) {
+        break;
+      }
+    }
+    if (cnt >= 0) {
+      item_count = cnt;
+    }
+  }
+  ~Column() = default;
 };
 
 struct BatchRowMeta final : public StreamMetaBind<BatchRow> {
-  const size_t original_column_size;
+  size_t original_column_size;
   std::vector<Column> columns;
   std::unordered_map<std::string_view, size_t> column_name_to_index;
 
@@ -67,10 +85,25 @@ class BatchRow final : public Stream {
     external_data_[key] = std::string(value);
   }
 
-  std::unordered_map<std::string, std::string> external_data() { return external_data_; }
+  const std::unordered_map<std::string, std::string>& external_data() { return external_data_; }
+
+  void set_batch_row_meta(std::shared_ptr<BatchRowMeta> batch_row_meta) {
+    size_t ori_exteral_size =
+        batch_row_meta_->columns.size() - batch_row_meta_->original_column_size;
+    size_t new_external_size =
+        batch_row_meta->columns.size() - batch_row_meta->original_column_size;
+    ColumnBlock* p = new ColumnBlock[new_external_size]();
+    DATAFLOW_THROW_IF(ori_exteral_size > new_external_size,
+                      absl::StrFormat("ori_exteral_size: %d, new_external_size: %d",
+                                      ori_exteral_size, new_external_size));
+    for (size_t i = 0; i < ori_exteral_size; ++i) {
+      p[i] = external_column_blocks_[i];
+    }
+    external_column_blocks_.reset(p);
+    batch_row_meta_ = batch_row_meta;
+  }
 
  private:
-  int32_t column_block_size_;
   std::unique_ptr<ColumnBlock[]> column_blocks_;
   std::unique_ptr<ColumnBlock[]> external_column_blocks_;
   std::shared_ptr<BatchRowMeta> batch_row_meta_;

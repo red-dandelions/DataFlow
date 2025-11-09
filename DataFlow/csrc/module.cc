@@ -18,11 +18,15 @@
 
 PYBIND11_MODULE(pybind_module, m) {
   HANDLE_DATAFLOW_ERRORS
+  pybind11::module::import("numpy");
+
   // 初始化 glog，默认 /tmp
   google::InitGoogleLogging("DataFlow");
 
   // 配置日志输出到终端（STDERR）
   google::SetStderrLogging(google::GLOG_INFO);  // INFO 及以上级别日志输出到终端
+
+
 
   data_flow::add_core_bindings(m);
   data_flow::add_streams_bindings(m);

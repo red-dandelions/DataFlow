@@ -9,9 +9,10 @@ py_test(
 )
 
 py_test(
-    name = "test_data_text_parser",
-    srcs = ["test_data_text_parser.py"],
+    name = "test_data_pipeline",
+    srcs = ["test_data_pipeline.py"],
     deps = [
         "//DataFlow",
+        "@pypi//numpy",
     ],
 )

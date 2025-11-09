@@ -2,6 +2,7 @@
 
 #include "batch_row.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 
@@ -11,21 +12,10 @@ namespace data_flow {
 
 BatchRowMeta::BatchRowMeta(std::vector<Column>&& _columns)
     : original_column_size(_columns.size()), columns(_columns) {
-  std::sort(columns.begin(), columns.end(), [](const Column& a, const Column& b) {
-    return a.column_type < b.column_type;
-  });
+  std::stable_sort(columns.begin(), columns.end(),
+                   [](const Column& a, const Column& b) { return a.column_type < b.column_type; });
   for (size_t i = 0; i < columns.size(); ++i) {
     column_name_to_index[columns[i].name] = i;
-    int64_t item_count = 1;
-    for (auto v : columns[i].shape) {
-      item_count *= v;
-      if (item_count < 0) {
-        break;
-      }
-    }
-    if (item_count >= 0) {
-      columns[i].item_count = item_count;
-    }
   }
 }
 

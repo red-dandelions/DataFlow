@@ -29,16 +29,15 @@ pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "pypi",
     python_version = "3.11",
-    requirements_lock = "//:requirements.txt",
+    requirements_lock = "//python:requirements.txt",
 )
 use_repo(pip, "pypi")
 
 # platforms and toolchains
 bazel_dep(name = "platforms", version = "1.0.0")
 register_toolchains(
-    "//toolchain:cc_toolchain_for_linux_x86_64"
+    "//toolchain:cc_toolchain_for_linux_x86_64",
 )
-
 
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
