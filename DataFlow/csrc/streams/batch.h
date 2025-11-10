@@ -1,6 +1,8 @@
 // 11.10
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 
 #include "DataFlow/csrc/streams/batch_row.h"
@@ -24,9 +26,10 @@ struct Batch final : public Stream {
   void* ptr();
 
   void add_batch_row(std::shared_ptr<BatchRow> batch_row);
+  std::shared_ptr<BatchRow> get_batch_row(size_t idx) {return batch_rows_[idx]; }
 
   const std::shared_ptr<BatchMeta> batch_meta;
-  const size_t batch_size;
+  size_t batch_size;
 
  private:
   std::vector<std::shared_ptr<BatchRow>> batch_rows_;

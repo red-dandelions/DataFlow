@@ -7,21 +7,32 @@ from DataFlow import (
     DataDecompressor,
     DataTextParser,
     DataBatchRowAdder,
+    DataBatcher,
 )
 import DataFlow
 import numpy as np
 
 class TestModule(unittest.TestCase):
     def test_DataPipeline(self):
+        test_idx = 0
         def func(sample_id, timestamp, slot_61, slot_1399):
             #print(sample_id, timestamp)
             #print(slot_61)
             #print(slot_1399)
             #print(type(slot_61))
             #print(type(slot_1399))
-            return np.array([1], dtype=np.int64)
+            nonlocal test_idx
+            test_idx += 1
+            return np.array([test_idx], dtype=np.int64)
 
-        file_list = ["/home/ubuntu/code/DataFlow/test/utils/text_sample_v2.gz.bak"]
+        def filter_fn(slot_1):
+            #print("test idx: ", slot_1)
+            return True
+        file_list = []
+        for i in range(50):
+            # 892 k * 50 = 43.55 M
+            # 8.261 s
+            file_list.append("/home/ubuntu/code/DataFlow/test/utils/text_sample_v2.gz.bak")
         # 生成文件时，从打印日志里复制过来
         columns = [
             DenseColumn(name="61", dtype=np.float32, shape=(11,)),
@@ -76,13 +87,15 @@ class TestModule(unittest.TestCase):
         d = DataDecompressor(d)
         d = DataTextParser(d, format="sample_id|group_id|sparse|dense|label|timestamp", columns=columns, external_data=["sample_id", "timestamp"])
         d = DataBatchRowAdder(d, func, ["sample_id", "timestamp", "61", "1399"], [SparseColumn(name="1", dtype=np.int64, shape=(1,))])
+        d = DataBatcher(d, batch_size=1024, filter_fns=[(filter_fn, ("1"))], drop_last_batch=True)
         cnt = 0
         for i in d:
-            #print(f"batch_row {cnt}: ", i)
+            #print(f"item {cnt}: ", i)
             cnt += 1
+            break
             #if cnt >= 5:
             #    break
-        #print(d)
+        print(cnt)
 
 
 if __name__ == "__main__":

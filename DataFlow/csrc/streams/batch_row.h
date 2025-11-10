@@ -64,9 +64,11 @@ class BatchRow final : public Stream {
     size_t byte_size = 0;
     union {
       void* ptr = nullptr;
-      int64_t offset;
       int64_t packed_data;
     };
+    void* data() {
+      return byte_size <= 8 ? reinterpret_cast<void*>(&packed_data) : ptr;
+    }
   };
 
  public:

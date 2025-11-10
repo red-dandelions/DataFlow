@@ -1,6 +1,7 @@
 // 11.6
 #include "data_text_parser.h"
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -60,6 +61,7 @@ DataTextParser::DataTextParser(std::shared_ptr<DataPipeline> pipeline, const std
 
 absl::StatusOr<std::shared_ptr<Stream>> DataTextParser::next() {
   std::string_view line = try_read_line_from_inflate_stream();
+  auto tp0 = std::chrono::steady_clock::now();
   if (line.empty() && line_buffer_.empty()) {
     VLOG(3) << "[DataTextParser] end of input";
     return nullptr;
@@ -68,7 +70,8 @@ absl::StatusOr<std::shared_ptr<Stream>> DataTextParser::next() {
   auto batch_row = std::make_shared<BatchRow>(output_stream_meta_);
 
   try_parse_line(batch_row, line.empty() ? line_buffer_ : line);
-
+  auto tp1 = std::chrono::steady_clock::now();
+  VLOG(6) << "parse a line cost: " << (tp1 - tp0).count() / 1000 << " us";
   return batch_row;
 }
 
