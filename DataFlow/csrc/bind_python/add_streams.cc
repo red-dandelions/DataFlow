@@ -13,6 +13,7 @@
 #include <string_view>
 
 #include "DataFlow/csrc/module.h"
+#include "DataFlow/csrc/streams/batch.h"
 #include "DataFlow/csrc/streams/batch_row.h"
 #include "DataFlow/csrc/streams/byte_stream.h"
 #include "DataFlow/csrc/streams/inflate_stream.h"
@@ -193,5 +194,13 @@ void add_streams_bindings(pybind11::module& m) {
         oss << "\n}";
         return oss.str();
       });
+
+  pybind11::class_<BatchMeta, std::shared_ptr<BatchMeta>, StreamMeta>(m, "BatchMeta")
+      .def_property_readonly("stream_type_name", [](std::shared_ptr<BatchMeta> self) {
+        return demangle_str_name(self->stream_type_index().name());
+      });
+  pybind11::class_<Batch, std::shared_ptr<Batch>, Stream>(m, "Batch")
+      .def_property_readonly("stream_meta",
+                             [](std::shared_ptr<Batch> self) { return self->stream_meta(); });
 }
 }  // namespace data_flow

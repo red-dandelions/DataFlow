@@ -21,7 +21,7 @@ class TestModule(unittest.TestCase):
             #print(type(slot_1399))
             return np.array([1], dtype=np.int64)
 
-        file_list = ["/home/ubuntu/code/DataFlow/test/utils/text_sample_v2.gz"]
+        file_list = ["/home/ubuntu/code/DataFlow/test/utils/text_sample_v2.gz.bak"]
         # 生成文件时，从打印日志里复制过来
         columns = [
             DenseColumn(name="61", dtype=np.float32, shape=(11,)),
@@ -80,8 +80,8 @@ class TestModule(unittest.TestCase):
         for i in d:
             #print(f"batch_row {cnt}: ", i)
             cnt += 1
-            if cnt >= 5:
-                break
+            #if cnt >= 5:
+            #    break
         #print(d)
 
 

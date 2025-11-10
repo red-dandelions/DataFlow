@@ -16,7 +16,7 @@ namespace data_flow {
 ByteStream::ByteStream(std::string&& file_name, size_t buffer_size)
     : file_name_(std::move(file_name)),
       buffer_size_(buffer_size),
-      buffer_(new char[buffer_size]),
+      buffer_(std::make_unique<char[]>(buffer_size)),
       pos_(0),
       end_(0) {
   local_file_ = std::fopen(file_name_.data(), "rb");
@@ -27,9 +27,6 @@ ByteStream::ByteStream(std::string&& file_name, size_t buffer_size)
 ByteStream::~ByteStream() {
   if (local_file_) {
     std::fclose(local_file_);
-  }
-  if (buffer_) {
-    delete[] buffer_;
   }
 }
 
@@ -43,7 +40,7 @@ std::span<const char> ByteStream::peek_chunk() {
   if (pos_ == end_) {
     refill_buffer();
   }
-  return std::span<const char>(buffer_ + pos_, end_ - pos_);
+  return std::span<const char>(buffer_.get() + pos_, end_ - pos_);
 }
 
 std::span<const char> ByteStream::read_chunk() {
@@ -51,7 +48,7 @@ std::span<const char> ByteStream::read_chunk() {
     refill_buffer();
   }
 
-  std::span<const char> chunk(buffer_ + pos_, end_ - pos_);
+  std::span<const char> chunk(buffer_.get() + pos_, end_ - pos_);
   pos_ = end_;
 
   return chunk;
@@ -61,7 +58,7 @@ bool ByteStream::eof() const { return pos_ >= end_ && std::feof(local_file_); }
 
 void ByteStream::refill_buffer() {
   pos_ = 0;
-  end_ = std::fread(buffer_, 1, buffer_size_, local_file_);
+  end_ = std::fread(buffer_.get(), 1, buffer_size_, local_file_);
 }
 
 }  // namespace data_flow

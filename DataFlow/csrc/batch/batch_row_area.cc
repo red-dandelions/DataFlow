@@ -24,12 +24,14 @@ struct MemoryBlockManager {
 
   ~MemoryBlockManager() {
     for (auto block : free_memory_blocks_) {
-      munmap(block->addr, block->size);
-      delete block;
+      if (block->addr) {
+        munmap(block->addr, block->size);
+      }
+      block->addr = nullptr;
     }
   }
 
-  MemoryBlock* get_memory_block(size_t size) {
+  std::shared_ptr<MemoryBlock> get_memory_block(size_t size) {
     const size_t alloc_size = ALIGN_SIZE(std::max<size_t>(size, kPerAllocSize), 4096);
     size_t idx = 0;
     for (; idx < free_memory_blocks_.size(); ++idx) {
@@ -38,7 +40,7 @@ struct MemoryBlockManager {
       }
     }
     if (idx >= free_memory_blocks_.size()) {
-      auto mem = new MemoryBlock();
+      auto mem = std::make_shared<MemoryBlock>();
       mem->refcount = 1;
       mem->allocated_size = 0;
       mem->size = alloc_size;
@@ -56,7 +58,7 @@ struct MemoryBlockManager {
     return mem;
   }
 
-  void release_memory_block(MemoryBlock* block) {
+  void release_memory_block(std::shared_ptr<MemoryBlock> block) {
     if (--block->refcount == 0) {
       std::lock_guard<std::mutex> lock(mtx_);
       block->allocated_size = 0;
@@ -66,12 +68,12 @@ struct MemoryBlockManager {
 
  private:
   std::mutex mtx_;
-  std::vector<MemoryBlock*> free_memory_blocks_;
+  std::vector<std::shared_ptr<MemoryBlock>> free_memory_blocks_;
   MemoryBlockManager() = default;
 };
 }  // namespace
 
-static MemoryBlock* g_mem_block =
+static std::shared_ptr<MemoryBlock> g_mem_block =
     MemoryBlockManager::Instance()->get_memory_block(MemoryBlockManager::kPerAllocSize);
 
 BatchRowArea::~BatchRowArea() {

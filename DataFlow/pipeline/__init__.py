@@ -4,6 +4,7 @@ from .data_reader import DataReader
 from .data_decompressor import DataDecompressor
 from .data_text_parser import DataTextParser
 from .data_batch_row_adder import DataBatchRowAdder
+from .data_batcher import DataBatcher
 
 @api_export(impl=_pym.DataPipeline)
 class DataPipeline:

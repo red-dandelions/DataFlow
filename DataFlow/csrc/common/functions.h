@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 #include <typeinfo>
+#include <vector>
 
 namespace data_flow {
 
@@ -50,6 +51,20 @@ inline std::string demangle_str_name(const std::string& type_name) {
   std::unique_ptr<char[], void (*)(void*)> demangled(
       abi::__cxa_demangle(name, nullptr, nullptr, &status), std::free);
   return (status == 0) ? demangled.get() : name;
+}
+
+template <typename T>
+std::vector<ssize_t> compute_strides_fortran(const std::vector<ssize_t>& shape) {
+  size_t dims = shape.size();
+  std::vector<ssize_t> strides(dims);
+  if (dims == 0) return strides;
+
+  ssize_t element_size = static_cast<ssize_t>(sizeof(T));
+  strides[0] = element_size;  // 第一个维度步长 = 元素大小
+  for (size_t i = 1; i < dims; ++i) {
+    strides[i] = strides[i - 1] * shape[i - 1];
+  }
+  return strides;
 }
 
 }  // namespace data_flow

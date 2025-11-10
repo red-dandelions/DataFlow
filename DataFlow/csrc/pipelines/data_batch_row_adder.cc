@@ -15,24 +15,11 @@
 #include "pybind11/numpy.h"
 
 #include "DataFlow/csrc/common/exceptions.h"
+#include "DataFlow/csrc/common/functions.h"
 #include "DataFlow/csrc/streams/batch_row.h"
 
 namespace data_flow {
-namespace {
-template <typename T>
-std::vector<ssize_t> compute_strides_fortran(const std::vector<ssize_t>& shape) {
-  size_t dims = shape.size();
-  std::vector<ssize_t> strides(dims);
-  if (dims == 0) return strides;
 
-  ssize_t element_size = static_cast<ssize_t>(sizeof(T));
-  strides[0] = element_size;  // 第一个维度步长 = 元素大小
-  for (size_t i = 1; i < dims; ++i) {
-    strides[i] = strides[i - 1] * shape[i - 1];
-  }
-  return strides;
-}
-}  // namespace
 DataBatchRowAdder::DataBatchRowAdder(std::shared_ptr<DataPipeline> pipeline, pybind11::function fn,
                                      std::vector<std::string>&& args_name,
                                      std::vector<Column>&& add_columns)

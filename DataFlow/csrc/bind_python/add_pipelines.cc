@@ -18,6 +18,7 @@
 #include "DataFlow/csrc/common/exceptions.h"
 #include "DataFlow/csrc/module.h"
 #include "DataFlow/csrc/pipelines/data_batch_row_adder.h"
+#include "DataFlow/csrc/pipelines/data_batcher.h"
 #include "DataFlow/csrc/pipelines/data_decompressor.h"
 #include "DataFlow/csrc/pipelines/data_reader.h"
 #include "DataFlow/csrc/pipelines/data_text_parser.h"
@@ -167,6 +168,43 @@ void add_pipelines_bindings(pybind11::module& m) {
            pybind11::arg("add_columns") = pybind11::list())
       .def_property_readonly("output_stream_meta", &DataBatchRowAdder::output_stream_meta)
       .def("__iter__", [](std::shared_ptr<DataBatchRowAdder> self) -> pybind11::object {
+        HANDLE_DATAFLOW_ERRORS
+        auto obj = GetDataPipelineIterator(std::reinterpret_pointer_cast<DataPipeline>(self));
+        return pybind11::reinterpret_borrow<pybind11::object>(obj);
+        END_HANDLE_DATAFLOW_ERRORS_RET(pybind11::none())
+      });
+
+  pybind11::class_<DataBatcher, std::shared_ptr<DataBatcher>, DataPipeline>(m, "DataBatcher")
+      .def(pybind11::init([](pybind11::handle input_h, int64_t batch_size,
+                             pybind11::handle filter_fns_h,
+                             bool drop_last_batch) -> std::shared_ptr<DataBatcher> {
+             HANDLE_DATAFLOW_ERRORS
+             DATAFLOW_THROW_IF(!pybind11::isinstance<DataPipeline>(input_h),
+                               "Expected a DataPipeline");
+             auto input_pipeline = input_h.cast<std::shared_ptr<DataPipeline>>();
+
+             DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::list>(filter_fns_h),
+                               "Expected a list of (fn, (arg1, arg2, ...), ...) objects");
+             pybind11::list filter_fns = filter_fns_h.cast<pybind11::list>();
+             std::vector<std::pair<pybind11::function, pybind11::tuple>> fn_args;
+             for (auto item : filter_fns) {
+               DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::tuple>(item),
+                                 "Expected a (fn, (args...)) tuple object in the list");
+               auto t = item.cast<pybind11::tuple>();
+               DATAFLOW_THROW_IF(t.size() > 2 || t.size() == 0, "must 0 < tuple size <= 2");
+               DATAFLOW_THROW_IF(!pybind11::isinstance<pybind11::cpp_function>(t[0]),
+                                 "tuple[0] must be fn");
+               fn_args.push_back({t[0], t.size() == 1 ? pybind11::tuple() : t[1]});
+             }
+
+             return std::make_shared<DataBatcher>(input_pipeline, batch_size, fn_args,
+                                                  drop_last_batch);
+             END_HANDLE_DATAFLOW_ERRORS
+           }),
+           pybind11::arg("input"), pybind11::arg("batch_size"), pybind11::arg("filter_fns"),
+           pybind11::arg("drop_last_batch") = true)
+      .def_property_readonly("output_stream_meta", &DataBatcher::output_stream_meta)
+      .def("__iter__", [](std::shared_ptr<DataBatcher> self) -> pybind11::object {
         HANDLE_DATAFLOW_ERRORS
         auto obj = GetDataPipelineIterator(std::reinterpret_pointer_cast<DataPipeline>(self));
         return pybind11::reinterpret_borrow<pybind11::object>(obj);

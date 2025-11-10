@@ -1,6 +1,7 @@
 // 11.8
 #include <atomic>
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 #include "DataFlow/csrc/common/macros.h"
@@ -28,6 +29,6 @@ struct BatchRowArea {
   }
 
  private:
-  std::vector<MemoryBlock*> blocks_;
+  std::vector<std::shared_ptr<MemoryBlock>> blocks_;
 };
 }  // namespace data_flow

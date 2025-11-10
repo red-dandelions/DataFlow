@@ -45,7 +45,7 @@ class ByteStream final : public Stream {
 
   FILE* local_file_;
   size_t buffer_size_;
-  char* buffer_ = nullptr;
+  std::unique_ptr<char[]> buffer_ = nullptr;
   size_t pos_;
   size_t end_;
   std::string file_name_;

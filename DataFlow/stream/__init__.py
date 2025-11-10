@@ -4,6 +4,7 @@ from .byte_stream import ByteStreamMeta, ByteStream
 from .inflate_stream import InflateStreamMeta, InflateStream
 from .string_stream import StringStreamMeta, StringStream
 from .batch_row import DenseColumn, SparseColumn, BatchRowMeta, BatchRow
+from .batch import BatchMeta, Batch
 
 @api_export(impl=_pym.StreamMeta)
 class StreamMeta:
