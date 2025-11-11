@@ -1,0 +1,21 @@
+FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
+
+RUN apt-get update && apt-get install -y lsb-release git git-lfs zip vim wget software-properties-common gnupg
+
+# 安装 clang
+ARG CLANG_VERSION=18
+RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh ${CLANG_VERSION} all && rm llvm.sh
+
+# Bazel
+ARG BAZELLIST_VERSION=1.26.0
+RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELLIST_VERSION}/bazelisk-linux-amd64 && \
+    mv bazelisk-linux-amd64 /usr/local/bin/bazel && \
+    chmod +x /usr/local/bin/bazel
+ARG BUILDIFIER_VERSION=8.2.0
+RUN wget https://github.com/bazelbuild/buildtools/releases/download/v${BUILDIFIER_VERSION}/buildifier-linux-amd64 &&\
+    mv buildifier-linux-amd64 /usr/local/bin/buildifier &&\
+    chmod +x /usr/local/bin/buildifier
+
+RUN pip3 install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121

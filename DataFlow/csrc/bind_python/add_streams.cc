@@ -13,6 +13,7 @@
 #include <string_view>
 
 #include "DataFlow/csrc/module.h"
+#include "DataFlow/csrc/pipelines/data_batcher.h"
 #include "DataFlow/csrc/streams/batch.h"
 #include "DataFlow/csrc/streams/batch_row.h"
 #include "DataFlow/csrc/streams/byte_stream.h"
