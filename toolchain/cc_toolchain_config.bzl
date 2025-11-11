@@ -16,7 +16,7 @@ all_link_actions = [
 ]
 
 def _impl(ctx):
-    clang_version = ctx.var.get("DATAFLOW-CLANG-VERSION", "18")
+    clang_version = ctx.var.get("DATAFLOW-CLANG-VERSION", "14")
     tool_paths = [
         tool_path(
             name = "gcc",  # Compiler is referenced by the name "gcc" for historic reasons.
@@ -77,6 +77,7 @@ def _impl(ctx):
         features = features,
         cxx_builtin_include_directories = [
             "/usr/lib/llvm-" + clang_version + "/lib/clang/" + clang_version + "/include",
+            "/usr/lib/llvm-14/lib/clang/14.0.6/include", # clang 14 需要
             "/usr/include",
         ],
         toolchain_identifier = "local",

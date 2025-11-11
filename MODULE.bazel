@@ -32,6 +32,16 @@ pip.parse(
 )
 use_repo(pip, "pypi")
 
+# cuda
+cuda = use_extension("@rules_cuda//cuda:extensions.bzl", "toolchain")
+cuda.local_toolchain(
+    name = "local_cuda",
+    toolkit_path = "/usr/local/cuda", # CUDA 安装路径
+)
+use_repo(cuda, "local_cuda")
+
+
+
 # platforms and toolchains
 bazel_dep(name = "platforms", version = "1.0.0")
 register_toolchains(

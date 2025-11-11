@@ -1,0 +1,22 @@
+load("@rules_cuda//cuda:defs.bzl", "cuda_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+cuda_library(
+    name = "test_kernel",
+    srcs = ["test_kernel.cu"],
+    hdrs = [],
+    copts = [
+        "-allow-unsupported-compiler",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "main",
+    srcs = ["main.cc"],
+    visibility = ["//visibility:public"],
+    linkopts = ["-lm"],
+    deps = [
+        ":test_kernel",
+    ],
+)
