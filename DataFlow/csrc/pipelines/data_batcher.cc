@@ -287,7 +287,7 @@ pybind11::dict DataBatcher::batch_cast_to_dict(std::shared_ptr<Batch> batch) {
 
   auto tp1 = std::chrono::steady_clock::now();
 
-  VLOG(6) << "cast to batch cost: " << (tp1 -tp0).count() / 1000 << " us";
+  VLOG(6) << "cast to batch cost: " << (tp1 - tp0).count() / 1000 << " us";
   return d;
 }
 }  // namespace data_flow

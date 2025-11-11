@@ -26,7 +26,7 @@ struct Batch final : public Stream {
   void* ptr();
 
   void add_batch_row(std::shared_ptr<BatchRow> batch_row);
-  std::shared_ptr<BatchRow> get_batch_row(size_t idx) {return batch_rows_[idx]; }
+  std::shared_ptr<BatchRow> get_batch_row(size_t idx) { return batch_rows_[idx]; }
 
   const std::shared_ptr<BatchMeta> batch_meta;
   size_t batch_size;

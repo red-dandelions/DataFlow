@@ -66,9 +66,7 @@ class BatchRow final : public Stream {
       void* ptr = nullptr;
       int64_t packed_data;
     };
-    void* data() {
-      return byte_size <= 8 ? reinterpret_cast<void*>(&packed_data) : ptr;
-    }
+    void* data() { return byte_size <= 8 ? reinterpret_cast<void*>(&packed_data) : ptr; }
   };
 
  public:

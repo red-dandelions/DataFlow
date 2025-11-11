@@ -26,8 +26,6 @@ PYBIND11_MODULE(pybind_module, m) {
   // 配置日志输出到终端（STDERR）
   google::SetStderrLogging(google::GLOG_INFO);  // INFO 及以上级别日志输出到终端
 
-
-
   data_flow::add_core_bindings(m);
   data_flow::add_streams_bindings(m);
   data_flow::add_pipelines_bindings(m);

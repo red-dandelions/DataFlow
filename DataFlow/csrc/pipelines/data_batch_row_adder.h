@@ -29,7 +29,7 @@ class DataBatchRowAdder final : public DataPipeline {
   // 用于处理数据的 python 函数
   pybind11::function fn_;
   const std::vector<std::string> args_name_;
-  
+
   std::vector<Column> add_columns_;
   std::shared_ptr<DataPipeline> input_pipeline_;
   std::shared_ptr<BatchRowMeta> output_stream_meta_;

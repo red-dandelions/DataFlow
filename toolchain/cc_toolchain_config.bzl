@@ -16,38 +16,39 @@ all_link_actions = [
 ]
 
 def _impl(ctx):
+    clang_version = ctx.var.get("DATAFLOW-CLANG-VERSION", "18")
     tool_paths = [
         tool_path(
             name = "gcc",  # Compiler is referenced by the name "gcc" for historic reasons.
-            path = "/usr/bin/clang-20",
+            path = "/usr/bin/clang-" + clang_version,
         ),
         tool_path(
             name = "ld",
-            path = "/usr/bin/ld.lld-20",
+            path = "/usr/bin/ld.lld-" + clang_version,
         ),
         tool_path(
             name = "ar",
-            path = "/usr/bin/llvm-ar-20",
+            path = "/usr/bin/llvm-ar-" + clang_version,
         ),
         tool_path(
             name = "cpp",
-            path = "/usr/bin/clang-20",
+            path = "/usr/bin/clang-" + clang_version,
         ),
         tool_path(
             name = "gcov",
-            path = "/usr/bin/llvm-cov-20",
+            path = "/usr/bin/llvm-cov-" + clang_version,
         ),
         tool_path(
             name = "nm",
-            path = "/usr/bin/llvm-nm-20",
+            path = "/usr/bin/llvm-nm-" + clang_version,
         ),
         tool_path(
             name = "objdump",
-            path = "/usr/bin/llvm-objdump-20",
+            path = "/usr/bin/llvm-objdump-" + clang_version,
         ),
         tool_path(
             name = "strip",
-            path = "/usr/bin/llvm-strip-20",
+            path = "/usr/bin/llvm-strip-" + clang_version,
         ),
     ]
 
@@ -75,7 +76,7 @@ def _impl(ctx):
         ctx = ctx,
         features = features,
         cxx_builtin_include_directories = [
-            "/usr/lib/llvm-20/lib/clang/20/include",
+            "/usr/lib/llvm-" + clang_version + "/lib/clang/" + clang_version + "/include",
             "/usr/include",
         ],
         toolchain_identifier = "local",
