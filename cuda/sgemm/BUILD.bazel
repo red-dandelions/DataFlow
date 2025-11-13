@@ -3,4 +3,9 @@ load("@rules_cc//cc:defs.bzl", "cc_binary")
 cc_binary(
     name = "sgemm_v1",
     srcs = ["sgemm_v1.cc"],
+    copts = [
+        "-march=native",
+        "-O2",
+        "-mavx2"
+    ]
 )

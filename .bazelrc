@@ -18,3 +18,6 @@ build:release --cxxopt=-DNDEBUG
 # Convenient flag shortcuts.
 build --@rules_cuda//cuda:enable
 build --flag_alias=cuda_archs=@rules_cuda//cuda:archs
+
+#python
+build --incompatible_default_to_explicit_init_py=true
