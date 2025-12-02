@@ -1,0 +1,30 @@
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+
+# bazel test [name]_test
+# bazel run [name].update
+# bazel test requirements_test
+# bazel run requirements.update
+compile_pip_requirements(
+    name = "requirements",
+    src = "requirements.in",
+    requirements_txt = "requirements.txt",
+)
+
+"""
+py_library(
+    name = "my_lib",
+    deps = [
+        "@pypi//numpy",
+    ],
+)
+
+or 
+
+load("@pypi//:requirements.bzl", "requirement")
+
+py_library(
+    deps = [
+        requirement("numpy")
+    ],
+)
+"""

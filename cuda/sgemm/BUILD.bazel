@@ -6,6 +6,9 @@ cc_binary(
     copts = [
         "-march=native",
         "-O2",
-        "-mavx2"
-    ]
+        "-mavx2",
+    ],
+    linkopts = [
+        "-lm",
+    ],
 )
